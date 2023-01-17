@@ -1,0 +1,3 @@
+[submodule "termija"]
+	path = termija
+	url = https://github.com/gomnarija/termija.git
