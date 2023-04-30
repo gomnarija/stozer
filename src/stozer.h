@@ -1,6 +1,12 @@
+#ifndef STOZER_H
+#define STOZER_H
+
+
 #include <termija.h>
 
 #include <vector>
+#include <stack>
+#include <unordered_map>
 #include <string>
 #include <memory>
 
@@ -19,6 +25,7 @@ class Stozer;
 class Process{
 protected:
     Process(Stozer &stozer);
+
     std::string                     name;//unique
     uint16_t                        PID=0;//0 default,starts from 1
 
@@ -28,11 +35,15 @@ public:
     const std::string &             getName();
     uint16_t                        getPID();
     void                            setPID(uint16_t);
-    
+
     //cycle
     virtual void setup()=0;
     virtual void update()=0;
     virtual void cleanup()=0;
+    virtual void draw()=0;
+
+
+    virtual Process*                instantiate()=0;
 };
 
 //singleton
@@ -41,31 +52,42 @@ class Stozer{
     Stozer(const Stozer&)           = delete;
 
 private:
-    std::vector<std::unique_ptr<Process>>                       loaded;
-    std::vector<std::unique_ptr<Process>>                       running;
-    //currently active/drawn Process
-    uint8_t                                                     activePID;
-    Process                                                    *active;
+
+    std::unordered_map
+        < std::string, std::unique_ptr<Process> >               loaded;
+    
+    std::unordered_map
+        < uint16_t, std::unique_ptr<Process> >               running;
+
     //rope buffers
     std::unique_ptr<RopeNode>                                   ropeout;
     std::unique_ptr<RopeNode>                                   ropein;
+
+    //currently active/drawn Processes
+    std::stack<uint16_t>                                        frontStack;
+
     //cycle
     void        start();
     void        update();
     void        end();
     //util
-    size_t         find_loaded_by_name(const std::string);
-    size_t         find_running_by_PID(const uint8_t);
-    uint16_t       get_next_PID(); 
+    uint16_t       get_next_PID();
+    bool           loaded_exists_with_name(const std::string);
+    bool           running_exists_with_PID(uint16_t);
 
 
 public:
     bool                                                        shouldEnd;
     termija::Pane                                              *pane;
 
+
+    uint16_t                                                     getFrontPID();
+    void                                                         setFrontPID(uint16_t);
+
     //operations
-    int8_t         processLoad(std::unique_ptr<Process>);
-    int8_t         processRun(const std::string);
+    int8_t           processLoad(std::unique_ptr<Process>);
+    uint16_t         processRun(const std::string);
+    int8_t           processTerminate(uint16_t);
     
     
     void            sout(const std::string);//standard out
@@ -83,24 +105,8 @@ private://accessible only from main
 
 
 
-// maybe move from here ? TODO:
-class Krsh : public Process{
-public:
-    //cycle
-    void setup() override;
-    void update() override;
-    void cleanup() override;
-
-
-public:
-    Krsh(stozer::Stozer &);
-
-
-
-};
-
-
-
-
-
 }
+
+
+
+#endif

@@ -1,7 +1,10 @@
 #include "stozer.h"
 #include <termija.h>
+#include <krsh.h>
+
 #include <plog/Log.h>
 #include <plog/Initializers/RollingFileInitializer.h>
+
 
 
 #include <iostream>
@@ -11,13 +14,38 @@ namespace stozer{
 
 
 Stozer::Stozer(): 
-pane{nullptr},
 ropein{nullptr},
 ropeout{nullptr},
-shouldEnd{false},
-activePID{0},
-active{nullptr}
+shouldEnd{false}
 {}
+
+
+/*
+    returns frontPid,
+        if none set returns 0
+*/
+uint16_t
+Stozer::getFrontPID(){
+    if(this->frontStack.empty()){
+        return 0;
+    }else{
+        return this->frontStack.top();
+    }
+}
+
+
+/*
+    sets the given PID as frontPID
+*/
+void
+Stozer::setFrontPID(uint16_t PID){
+    if(this->running.find(PID) == this->running.end()){
+        PLOG_ERROR << "couldn't find running process with PID: " << PID << " ,aborted."; 
+    }else{
+        this->frontStack.push(PID);
+    }
+}
+
 
 
 
@@ -37,7 +65,7 @@ Stozer::start(){
     termija::tra_init_termija();
     termija::tra_set_fps(60);
     this->pane = termija::tra_get_current_pane();
-    if(this->pane == nullptr){//termija not initialized properly
+    if(this->pane == nullptr){
         PLOG_ERROR << "failed to initialize termija.";
         this->shouldEnd = true;
         return;
@@ -47,7 +75,7 @@ Stozer::start(){
     this->ropein    = rope_create_empty();
     this->ropeout   = rope_create_empty();
     if(this->ropein == nullptr || this->ropeout == nullptr){
-        PLOG_ERROR << "failed create ropes.";
+        PLOG_ERROR << "failed to create ropes.";
         this->shouldEnd = true;
         return;
     }
@@ -58,29 +86,37 @@ Stozer::update(){
     //termija
     if(!termija::tra_should_close()){
         termija::tra_update();
-        termija::tra_draw();
+        termija::tra_draw_current();
     }else{
         this->shouldEnd = true;
     }
 
-    //process'
-    for(int i=0;i<this->running.size();i++){
-        Process *p = this->running.at(i).get();
-        p->update();
+    //processes
+    std::unordered_map
+        < uint16_t, std::unique_ptr<Process> >::iterator it;
+    for(it = running.begin(); it != running.end(); it++){
+        Process *currentProcess = it->second.get();
+        currentProcess->update();
+        //draw if in front
+        if(currentProcess->getPID() == this->getFrontPID())
+            currentProcess->draw();
     }
 }
 
 void 
 Stozer::end(){
 
-
+    //terminate running processes : TODO
+    std::unordered_map
+        < uint16_t, std::unique_ptr<Process> >::iterator it;
+    for(it = running.begin(); it != running.end(); it++){
+        this->processTerminate(it->first);
+    }
+    
     //termija
     termija::tra_terminate();
 
 }
-
-
-
 
 
 //
@@ -89,55 +125,25 @@ Stozer::end(){
 
 
 /*
-    returns the next avaliable PID
+    returns the first avaliable PID
 */
 uint16_t 
 Stozer::get_next_PID(){
     int currentPID = 1;
-    while(find_running_by_PID(currentPID)!=-1)
+    while(this->running.find(currentPID) != this->running.end())
         currentPID++;
 
     return currentPID;
-} 
-
-
-/*
-    returns index for a loaded process with a given name,
-        on error or nothing found returns -1
-*/
-size_t 
-Stozer::find_loaded_by_name(const std::string name){
-    for(int i=0;i<this->loaded.size();i++){
-        Process *p = this->loaded.at(i).get();
-        if(p->getName() == name){
-            return i;
-        }
-    }
-    return -1;
 }
 
 
-/*
-    returns index for a running process with a given PID,
-        on error or nothing found returns -1
-*/
-size_t 
-Stozer::find_running_by_PID(const uint8_t PID){
-    for(int i=0;i<this->running.size();i++){
-        Process *p = this->running.at(i).get();
-        if(p->getPID() == PID){
-            return i;
-        }
-    }
-    return -1;
-}
 
 //
 //  PROCESS MANIPULATION
 //
 
 /*
-    loads the given process into vector; consumes pointer;
+    loads the given process into map; consumes pointer;
         returns:
             success - 1
             process with that name already exists - 0
@@ -150,40 +156,70 @@ Stozer::processLoad(std::unique_ptr<Process> process){
         return -1;
     }
 
-    //check if process with that name already exists
-    if(find_loaded_by_name(process->getName()) != -1){
-            PLOG_WARNING << "process with name: " << process->getName() << " already exists."; 
-            return 0;
-    }
-
-    //insert into vector
-    this->loaded.push_back(std::move(process));
+    //insert into map
+    this->loaded.insert(std::make_pair(process->getName(), std::move(process)));
     return 1;
 }
 
 
 /*
     runs the loaded process with the given name,
-        on success returns PID, on error -1
+        on success returns PID, on error 0
 */
-int8_t 
+uint16_t 
 Stozer::processRun(const std::string name){
-    //find loaded vector index with that name
-    size_t processIndex = find_loaded_by_name(name);
-    if(processIndex == -1 || processIndex >= this->loaded.size()){
+    if(this->loaded.find(name) == this->loaded.end()){
         PLOG_ERROR << "failed to find loaded process with name: " << name;
-        return -1;
+        return 0;
     }
 
-    //add from loaded to running vector, assign PID
-    uint16_t PID = get_next_PID();
-    this->loaded.at(processIndex)->setPID(PID);
-    this->running.push_back(std::move(this->loaded.at(processIndex)));
+    //clone from loaded to running vector
+    std::unique_ptr<Process> processInstance((this->loaded.at(name))->instantiate());
+    if(processInstance.get() == nullptr){
+        PLOG_ERROR << "failed to clone loaded process with name " << name;
+        return 0;
+    }
 
+    //assign PID
+    uint16_t PID = get_next_PID();
+    processInstance->setPID(PID);
+
+    //push to vector
+    Process *p = processInstance.get();
+    this->running.insert(std::make_pair(PID, std::move(processInstance)));
+
+    //run process setup
+    p->setup();
+    
     return PID;
 }
 
 
+/*
+    terminates the process with given PID,
+        on error returns -1
+*/
+int8_t
+Stozer::processTerminate(uint16_t PID){
+    if(this->running.find(PID) == this->running.end()){
+        PLOG_ERROR << "couldn't find running process with PID: " << PID << " ,aborted."; 
+        return -1;
+    }
+
+    //call process cleanup
+    this->running.at(PID)->cleanup();
+
+    //remove from running map
+    this->running.erase(PID);
+
+    //move from front
+    if(this->getFrontPID() == PID){
+        this->frontStack.pop();
+        termija::tra_set_current_pane(this->pane);
+    }
+
+    return 1;
+}
 
 
 void 
@@ -210,8 +246,10 @@ int main(void){
 
     //run krsh
     stz.processRun("krsh");
+    //stz.processLoad(std::make_unique<Krsh>(stz));
+    stz.processRun("krsh");
 
-
+    stz.processTerminate(2);
 
     while(!stz.shouldEnd){
         stz.update();

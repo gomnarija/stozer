@@ -13,5 +13,5 @@ add_subdirectory(${SOURCE_DIR} build)
 
 
 add_executable(stozer ${SOURCE_FILES})
-target_include_directories(stozer PRIVATE ${SOURCE_DIR} ${TERMIJA_SOURCE_DIR})
+target_include_directories(stozer PRIVATE ${SOURCE_DIR} ${SOURCE_DIR}/userspace ${TERMIJA_SOURCE_DIR})
 target_link_libraries(stozer PRIVATE termija raylib plog)
