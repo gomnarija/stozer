@@ -259,12 +259,13 @@ Stozer::createPane(uint16_t PID){
 
 /*
     returns front of the key buffer,
-        on empty buffer returns KEY_GRAVE
+        on empty buffer returns KEY_NULL;
+
 */
 KeyboardKey
 Stozer::getPressedKey(){
     if(this->keyQueue.empty())
-        return KEY_GRAVE;
+        return KEY_NULL;
 
     KeyboardKey key = this->keyQueue.front();
     this->keyQueue.pop();
