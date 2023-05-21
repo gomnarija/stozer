@@ -38,10 +38,14 @@ void Krsh::setup(){
 
     this->textBox->insertAtCursor("muda.muda.muda.muda.muda.muda.muda.muda.kraj :) ");
     this->textBox->insertAtCursor(std::to_string(this->PID).c_str());
+    this->textBox->insertAtCursor(std::string(1, char(this->stozer.getPressedKey())).c_str());
 }
 
 void Krsh::update(){
-    this->stozer.sout(std::to_string(this->PID));
+    KeyboardKey key = this->stozer.getPressedKey();
+    if(std::isalpha(key)){
+        this->textBox->insertAtCursor(std::string(1, char(key)).c_str());
+    }
 }
 
 
@@ -49,9 +53,6 @@ void Krsh::update(){
 void Krsh::draw(){
     if(termija::tra_get_current_pane() != this->pane)
         termija::tra_set_current_pane(this->pane);
-        
-    this->stozer.sout("slikam");
-
 
 
     this->textBox->update();

@@ -91,6 +91,12 @@ Stozer::update(){
         this->shouldEnd = true;
     }
 
+    //input
+    int key = GetKeyPressed();
+    if(key != 0)
+        this->pressKey((KeyboardKey) key);
+
+
     //processes
     std::unordered_map
         < uint16_t, std::unique_ptr<Process> >::iterator it;
@@ -112,7 +118,7 @@ Stozer::end(){
     for(it = running.begin(); it != running.end(); it++){
         this->processTerminate(it->first);
     }
-    
+
     //termija
     termija::tra_terminate();
 
@@ -222,11 +228,104 @@ Stozer::processTerminate(uint16_t PID){
 }
 
 
-void 
-Stozer::sout(const std::string text){
-    std::cout << text;
+//
+//  KEYBOARD
+//
+
+
+/*
+    returns front of the key buffer,
+        on empty buffer returns KEY_GRAVE
+*/
+KeyboardKey
+Stozer::getPressedKey(){
+    if(this->keyQueue.empty())
+        return KEY_GRAVE;
+
+    KeyboardKey key = this->keyQueue.front();
+    this->keyQueue.pop();
+    return key;
 }
 
+/*
+    clears key buffer
+*/
+void
+Stozer::clearKeys(){
+    std::queue<KeyboardKey> empty;
+    std::swap(this->keyQueue, empty);
+}
+
+/*
+    places the given key into the key buffer,
+        only alphanumeric and special keys allowed
+*/
+void
+Stozer::pressKey(const KeyboardKey key){
+    bool isSpecial = false;
+    for(int i=0;i<SPECIAL_KEYS_SIZE && !isSpecial;i++){
+        if(key == SPECIAL_KEYS[i])
+            isSpecial = true;
+    }
+
+    if(std::isalnum(key) || isSpecial)
+        this->keyQueue.push(key);
+} 
+
+
+
+//
+//  TEXT FLOW
+//
+
+
+/*
+    concatenates given text to input stream
+*/
+void
+Stozer::stdInPut(const std::string text){
+    this->stin += text;
+}
+
+/*
+    returns input stream
+*/
+std::string
+Stozer::stdInPull(){
+    return this->stin;
+}
+
+/*
+    clears input stream
+*/
+void
+Stozer::stdInClear(){
+    this->stin.clear();
+}
+
+/*
+    concatenates given text to output stream
+*/
+void
+Stozer::stdOutPut(const std::string text){
+    this->stout += text;
+}
+
+/*
+    returns output stream
+*/
+std::string
+Stozer::stdOutPull(){
+    return this->stout;
+}
+
+/*
+    clears output stream
+*/
+void
+Stozer::stdOutClear(){
+    this->stout.clear();
+}
 
 
 }
@@ -246,14 +345,20 @@ int main(void){
 
     //run krsh
     stz.processRun("krsh");
+    stz.pressKey(KEY_N);
+
     //stz.processLoad(std::make_unique<Krsh>(stz));
     stz.processRun("krsh");
 
-    stz.processTerminate(2);
+    //stz.processTerminate(2);
+
+
 
     while(!stz.shouldEnd){
-        stz.update();
+         stz.update();
     }
 
     stz.end();
+
+    return 0;
 }

@@ -3,9 +3,11 @@
 
 
 #include <termija.h>
+#include <raylib.h>
 
 #include <vector>
 #include <stack>
+#include <queue>
 #include <unordered_map>
 #include <string>
 #include <memory>
@@ -55,9 +57,8 @@ private:
 
     std::unordered_map
         < std::string, std::unique_ptr<Process> >               loaded;
-    
     std::unordered_map
-        < uint16_t, std::unique_ptr<Process> >               running;
+        < uint16_t, std::unique_ptr<Process> >                  running;
 
     //rope buffers
     std::unique_ptr<RopeNode>                                   ropeout;
@@ -65,6 +66,13 @@ private:
 
     //currently active/drawn Processes
     std::stack<uint16_t>                                        frontStack;
+
+    //key buffer
+    std::queue<KeyboardKey>                                     keyQueue;
+
+    //text buffers
+    std::string                                                 stin;
+    std::string                                                 stout;
 
     //cycle
     void        start();
@@ -84,15 +92,27 @@ public:
     uint16_t                                                     getFrontPID();
     void                                                         setFrontPID(uint16_t);
 
-    //operations
+    //process operations
     int8_t           processLoad(std::unique_ptr<Process>);
     uint16_t         processRun(const std::string);
     int8_t           processTerminate(uint16_t);
     
     
-    void            sout(const std::string);//standard out
+    //keyboard
+    KeyboardKey     getPressedKey();
+    void            clearKeys();
+    void            pressKey(const KeyboardKey); 
 
 
+    //text flow
+        //input
+    void            stdInPut(const std::string);
+    std::string     stdInPull();
+    void            stdInClear();
+        //output
+    void            stdOutPut(const std::string);
+    std::string     stdOutPull();
+    void            stdOutClear();
 
     friend int ::main(void);
 private://accessible only from main
@@ -103,6 +123,14 @@ private://accessible only from main
 
 };
 
+const size_t        SPECIAL_KEYS_SIZE = 32;
+const KeyboardKey   SPECIAL_KEYS[SPECIAL_KEYS_SIZE] = {
+    KEY_UP,
+    KEY_DOWN,
+    KEY_LEFT,
+    KEY_RIGHT,
+    KEY_ENTER
+};
 
 
 }
