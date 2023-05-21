@@ -54,6 +54,9 @@ class Stozer{
     Stozer(const Stozer&)           = delete;
 
 private:
+    //termija
+    termija::Pane                                              *default_pane;
+
 
     std::unordered_map
         < std::string, std::unique_ptr<Process> >               loaded;
@@ -66,6 +69,8 @@ private:
 
     //currently active/drawn Processes
     std::stack<uint16_t>                                        frontStack;
+    std::unordered_map
+        < uint16_t, termija::Pane* >                            frontPaneMap;
 
     //key buffer
     std::queue<KeyboardKey>                                     keyQueue;
@@ -80,13 +85,11 @@ private:
     void        end();
     //util
     uint16_t       get_next_PID();
-    bool           loaded_exists_with_name(const std::string);
-    bool           running_exists_with_PID(uint16_t);
+
 
 
 public:
-    bool                                                        shouldEnd;
-    termija::Pane                                              *pane;
+    bool                                                         shouldEnd;
 
 
     uint16_t                                                     getFrontPID();
@@ -96,6 +99,9 @@ public:
     int8_t           processLoad(std::unique_ptr<Process>);
     uint16_t         processRun(const std::string);
     int8_t           processTerminate(uint16_t);
+
+    //termija
+    termija::Pane*   createPane(uint16_t);
     
     
     //keyboard

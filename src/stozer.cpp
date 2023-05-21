@@ -64,8 +64,8 @@ Stozer::start(){
     termija::tra_load_config("termija.conf");
     termija::tra_init_termija();
     termija::tra_set_fps(60);
-    this->pane = termija::tra_get_current_pane();
-    if(this->pane == nullptr){
+    this->default_pane = termija::tra_get_current_pane();
+    if(this->default_pane == nullptr){
         PLOG_ERROR << "failed to initialize termija.";
         this->shouldEnd = true;
         return;
@@ -221,12 +221,36 @@ Stozer::processTerminate(uint16_t PID){
     //move from front
     if(this->getFrontPID() == PID){
         this->frontStack.pop();
-        termija::tra_set_current_pane(this->pane);
+    }
+
+    //remove from pane map
+    this->frontPaneMap.erase(PID);
+
+    //set next current pane, or default
+    if(this->getFrontPID() > 0 && frontPaneMap.find(this->getFrontPID()) != frontPaneMap.end()){
+        termija::tra_set_current_pane(frontPaneMap.at(this->getFrontPID()));
+    }else{
+        termija::tra_set_current_pane(this->default_pane);
     }
 
     return 1;
 }
 
+
+//
+// TERMIJA
+//
+
+
+/*
+    creates new window-sized panes, connects it with the givne PID and imposes it as current pane
+*/
+termija::Pane*
+Stozer::createPane(uint16_t PID){
+    termija::Pane *pane = termija::tra_impose_duplicate_pane(this->default_pane);
+    this->frontPaneMap.insert(std::make_pair(PID, pane));
+    return pane;
+}
 
 //
 //  KEYBOARD
@@ -350,7 +374,7 @@ int main(void){
     //stz.processLoad(std::make_unique<Krsh>(stz));
     stz.processRun("krsh");
 
-    //stz.processTerminate(2);
+    stz.processTerminate(2);
 
 
 

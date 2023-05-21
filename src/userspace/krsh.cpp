@@ -28,7 +28,7 @@ void Krsh::setup(){
     this->stozer.setFrontPID(this->PID);
 
     //impose as current pane
-    this->pane = termija::tra_impose_duplicate_pane(this->stozer.pane);
+    this->pane = this->stozer.createPane(this->PID);
 
     //create widgets
     this->textBox = (termija::TextBox*)termija::tra_add_widget(*(this->pane),
@@ -51,8 +51,8 @@ void Krsh::update(){
 
 
 void Krsh::draw(){
-    if(termija::tra_get_current_pane() != this->pane)
-        termija::tra_set_current_pane(this->pane);
+    // if(termija::tra_get_current_pane() != this->pane)
+    //     termija::tra_set_current_pane(this->pane);
 
 
     this->textBox->update();
