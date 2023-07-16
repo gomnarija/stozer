@@ -4,13 +4,36 @@
 #include <stozer.h>
 #include <termija.h>
 
+#include <map>
+#include <sstream>
 
 namespace stozer{
 
 class Krsh : public Process{
+
+//config
 private:
-    termija::Pane               *pane;
-    termija::TextBox            *textBox;
+    uint8_t                     textBoxMargin           = 3;//percentage points
+    uint16_t                    maxCommandLength        = 256;//maximum allowed command length
+    uint16_t                    maxTextBoxTextLength    = 32768;//maximum allowed textBox text length, clears if over
+
+
+
+
+
+private:
+    termija::Pane                                   *pane;
+    termija::TextBox                                *textBox;
+    size_t                                          commandStartIndex;
+    std::stringstream                               krshOutStream;
+    std::unordered_map<std::string, std::string>    configMap;
+    std::string                                     handle;
+    std::map<uint16_t, bool>                        PIDMap;
+    std::vector<std::string>                        commandHistory;
+
+
+    int8_t                          built_in_commands(const std::string &, const std::string &);
+
 public:
     //cycle
     void setup() override;
@@ -18,11 +41,10 @@ public:
     void cleanup() override;
     void draw() override;
 
-    Process*  instantiate() override;
+    Process*  instantiate(const std::string &) override;
 
 public:
-    Krsh(stozer::Stozer &);
-
+    Krsh(stozer::Stozer &, const std::string &);
 };
 
 

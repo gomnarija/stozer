@@ -5,18 +5,19 @@
 namespace stozer{
 
 
-Process::Process(Stozer &stozer):
+
+Process::Process(Stozer &stozer, const std::string &arguments):
 stozer{stozer}
 {}
 
 
 const std::string & 
-Process::getName(){
+Process::getName() const{
     return this->name;
 }
 
 uint16_t 
-Process::getPID(){
+Process::getPID() const{
     return this->PID;
 }
 
@@ -26,5 +27,19 @@ Process::setPID(uint16_t PID){
         this->PID = PID;        
 }
 
+void
+Process::setOutStream(std::stringstream *os){
+    this->outStream = os;
+}
+
+bool
+Process::isBackground() const{
+    return this->isBackgroundProcess;
+}
+
+bool
+Process::isCommand() const{
+    return this->isCommandProcess;
+}
 
 }
