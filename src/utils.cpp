@@ -23,6 +23,22 @@ std::string trim_string(std::string str){
 }
 
 
+/*
+    leaves only one whitespace char in a row
+*/
+std::string remove_extra_whitespace(std::string str){
+    size_t i=0;
+    while ((i=str.find_first_of(' ', i)) != std::string::npos)
+    {
+        size_t j = std::min(str.find_first_not_of(" ", i), str.length());
+        str.replace(i, j-i, " ");
+        i++;
+    }
+    
+    return str;
+}
+
+
 std::string replace_all(std::string &str, const std::string& from, const std::string& to) {
     size_t start_pos = 0;
 

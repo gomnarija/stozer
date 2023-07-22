@@ -29,7 +29,6 @@ private:
     std::unordered_map<std::string, std::string>    configMap;
     std::string                                     handle;
     std::map<uint16_t, bool>                        PIDMap;
-    std::vector<std::string>                        commandHistory;
 
 
     int8_t                          built_in_commands(const std::string &, const std::string &);

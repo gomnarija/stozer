@@ -77,6 +77,7 @@ void Krsh::setup(){
     called every frame
 */
 void Krsh::update(){
+
     //Keyboard input
     char pressedChar = this->stozer.getPressedChar();
     KeyboardKey key = this->stozer.getPressedKey();
@@ -88,6 +89,7 @@ void Krsh::update(){
     //textBox input
     if(pressedChar > 0 && (this->textBox->getCurrentIndex() - commandStartIndex) <= maxCommandLength){
         this->textBox->insertAtCursor(std::string(1, pressedChar).c_str());
+        textBox->scrollToEnd();
     }
 
     //textBox handling
@@ -106,27 +108,31 @@ void Krsh::update(){
         if(key == KEY_ENTER){
             //get and parse command
             std::string command = string::trim_string(get_command(textBox, commandStartIndex));
-            std::vector<std::string> parsed = string::split_string(command, " ");
-            std::string processName = parsed.size() > 0 ? parsed.at(0) : "";
-            std::string arguments = string::split_string_into_two(command, " ").second;
-            //try built-in
-            int8_t binres = built_in_commands(processName, arguments);
-            if(binres == 1){
+            if(command.empty()){
                 next_command(this->textBox, this->handle, &(this->configMap), &(this->commandStartIndex), this->maxTextBoxTextLength);
-            }
-            else if(binres == 0){
-                //else try to run as process
-                std::pair<uint16_t, bool> resPair = run_process(this->stozer, processName, arguments, &(this->PIDMap), this->krshOutStream);
-                if(resPair.first == 0){//no process with that name
-                    error_process_not_found(textBox, processName);
-                    next_command(this->textBox, this->handle, &(this->configMap), &(this->commandStartIndex), this->maxTextBoxTextLength);
-                }else if(resPair.second){//non-blocking
+            }else{
+                std::vector<std::string> parsed = string::split_string(command, " ");
+                std::string processName = parsed.size() > 0 ? parsed.at(0) : "";
+                std::string arguments = string::trim_string(string::remove_extra_whitespace(string::split_string_into_two(command, " ").second));
+                //try built-in
+                int8_t binres = built_in_commands(processName, arguments);
+                if(binres == 1){
                     next_command(this->textBox, this->handle, &(this->configMap), &(this->commandStartIndex), this->maxTextBoxTextLength);
                 }
-            }
-            else if(binres == -1){//exited
-                return;
-            }
+                else if(binres == 0){
+                    //else try to run as process
+                    std::pair<uint16_t, bool> resPair = run_process(this->stozer, processName, arguments, &(this->PIDMap), this->krshOutStream);
+                    if(resPair.first == 0){//no process with that name
+                        error_process_not_found(textBox, processName);
+                        next_command(this->textBox, this->handle, &(this->configMap), &(this->commandStartIndex), this->maxTextBoxTextLength);
+                    }else if(resPair.second){//non-blocking
+                        next_command(this->textBox, this->handle, &(this->configMap), &(this->commandStartIndex), this->maxTextBoxTextLength);
+                    }
+                }
+                else if(binres == -1){//exited
+                    return;
+                }
+            }   
         }
     }else{//blocking processwait until it's done
         //if blockingPID is still running, print out and wait
@@ -135,7 +141,12 @@ void Krsh::update(){
             //new line
             this->textBox->insertLineAtCursor(" ");//TODO: this is not ideal,
                                         // maybe add TextBox function that adds newline flag at the end
-            this->textBox->insertAtCursor(this->krshOutStream.str().c_str());
+            //print outStream
+            std::vector<std::string> lines = string::split_string(this->krshOutStream.str(), "\n");
+            for(const auto &line : lines){
+                this->textBox->insertLineAtCursor(line.c_str());
+            }
+            
             this->krshOutStream.str(std::string());;
         }else{//process is done
             this->PIDMap.erase(blockingPID);
@@ -144,7 +155,7 @@ void Krsh::update(){
 
         const Process *prc = this->stozer.getRunningProcess(blockingPID);
         //command, terminate it
-        if(prc != nullptr && prc->isCommand()){
+        if(prc != nullptr && prc->isCommand() && this->PIDMap.find(blockingPID) != this->PIDMap.end()){
             this->stozer.processTerminate(blockingPID);
             this->PIDMap.erase(blockingPID);
             next_command(this->textBox, this->handle, &(this->configMap), &(this->commandStartIndex), this->maxTextBoxTextLength);
