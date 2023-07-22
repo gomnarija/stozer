@@ -536,7 +536,12 @@ Stozer::getWorkingDirectoryRelative(){
 */
 bool 
 Stozer::changeWorkingDirectory(const std::string &relativePath){
-    return filesystem::move_path(this->workingDirectory, relativePath);
+    std::string newPath = this->workingDirectory;
+    if(filesystem::move_path(newPath, relativePath) && filesystem::is_dir(newPath)){
+        this->workingDirectory = newPath;
+        return true;
+    }
+    return false;
 }
 
 /*

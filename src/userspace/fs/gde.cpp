@@ -31,7 +31,7 @@ void Gde::setup(){
         *(this->outStream)  << this->stozer.getWorkingDirectoryRelative();
     }else{
         std::string firstArg = string::split_string_into_two(this->gdeArguments, " ").first;
-        *(this->outStream)  << "Argument \"" + firstArg + "\" nije prepoznat.";
+        *(this->outStream)  << "argument \"" + firstArg + "\" nije prepoznat. ova komanda ne koristi argumente.";
     }
 }
 
