@@ -526,6 +526,12 @@ Stozer::getWorkingDirectory(){
     return this->workingDirectory;
 }
 
+
+const std::string&
+Stozer::getRootDirectory(){
+    return this->rootDirectory;
+}
+
 const std::string
 Stozer::getWorkingDirectoryRelative(){
     return filesystem::relative_path(this->rootDirectory, this->workingDirectory);

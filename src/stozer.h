@@ -158,6 +158,7 @@ public:
 
     //file system
     const std::string&          getWorkingDirectory();
+    const std::string&          getRootDirectory();
     const std::string           getWorkingDirectoryRelative();
     bool                        changeWorkingDirectory(const std::string&);
     int8_t                      makeDirectory(const std::string&);
