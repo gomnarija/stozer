@@ -86,7 +86,7 @@ private:
 
     uint16_t                                                    availablePID;
 
-    //key buffer
+    //keyboard
     std::queue<KeyboardKey>                                     keyQueue;
     
     bool                                                        isUpperCase;
@@ -101,14 +101,22 @@ private:
     Date                                                        date;
 
 
+    //file system
+    std::string                                                 rootDirectory;
+    std::string                                                 userHomeDirectory;
+    std::string                                                 workingDirectory;
+
+
     //cycle
     void            start();
     void            update();
     void            end();
+
     //util
     uint16_t        get_next_PID();
     void            time_forward(uint16_t);
     void            date_forward(uint16_t);
+    void            verify_file_system();
 
 
 
@@ -146,6 +154,17 @@ public:
     //date time
     const Time&            getTime();
     const Date&            getDate();
+
+
+    //file system
+    const std::string&          getWorkingDirectory();
+    const std::string           getWorkingDirectoryRelative();
+    bool                        changeWorkingDirectory(const std::string&);
+    int8_t                      makeDirectory(const std::string&);
+    std::vector<std::string>    listDirectory(const std::string&);
+    int8_t                      removeFileOrDir(const std::string&);
+    int8_t                      makeFile(const std::string&);
+    int8_t                      moveFileOrDir(const std::string&, const std::string&);
 
 
     friend int ::main(void);
@@ -220,6 +239,16 @@ const std::unordered_map< char, char > SHIFTED = {
     {']','}'},
     {'\\','|'}
 };
+
+
+//starting from GetWorkingDirectory
+const std::vector< std::string > REQUIRED_PATHS = {
+    "fs",
+    "fs\\korisnici",
+    "fs\\korisnici\\rs26",
+    "fs\\komande"
+};
+
 
 
 }

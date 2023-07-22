@@ -4,6 +4,12 @@
 #include <krsh.h>
 #include <sat.h>
 #include <kalendar.h>
+#include <gde.h>
+#include <idi.h>
+#include <napravi.h>
+#include <listaj.h>
+#include <ukloni.h>
+#include <pomeri.h>
 
 #include <plog/Log.h>
 #include <plog/Initializers/RollingFileInitializer.h>
@@ -11,10 +17,13 @@
 
 
 #include <iostream>
+#include <direct.h>
 #include <chrono>
+#include <filesystem>
+#include <fstream>
+#include <iostream>
 
 namespace stozer{
-
 
 
 Stozer::Stozer(): 
@@ -90,18 +99,25 @@ Stozer::start(){
     }
 
     //date time
+    // 09:00 AM
     this->microseconds = 0;
     this->time.hours = 9;
     this->time.minutes = 0;
     this->time.seconds = 0;
-
+    // 02/05/1980
     this->date.days = 2;
     this->date.months = 5;
     this->date.years = 1980;
 
+    //file system
+    this->verify_file_system();
+    this->rootDirectory = GetWorkingDirectory();
+    filesystem::move_path(this->rootDirectory, "fs");
 
-    date_forward(2783);
-
+    //set user home
+    this->userHomeDirectory = this->rootDirectory;
+    filesystem::move_path(this->userHomeDirectory, "korisnici\\rs26");
+    this->workingDirectory = this->userHomeDirectory;
 }
 
 void 
@@ -503,8 +519,218 @@ Stozer::date_forward(uint16_t passed){
 
 
 
+//file system
+
+const std::string&
+Stozer::getWorkingDirectory(){
+    return this->workingDirectory;
+}
+
+const std::string
+Stozer::getWorkingDirectoryRelative(){
+    return filesystem::relative_path(this->rootDirectory, this->workingDirectory);
+}
+
+/*
+    tries to change workingDirectory to given relative path
+*/
+bool 
+Stozer::changeWorkingDirectory(const std::string &relativePath){
+    return filesystem::move_path(this->workingDirectory, relativePath);
+}
+
+/*
+    tries to make a new directory at  given path
+    1 - success, 0 - fail, -1 - no permission 
+*/
+int8_t 
+Stozer::makeDirectory(const std::string &relativePath){
+    std::string directoryPath = std::string(this->getWorkingDirectory());
+    if(filesystem::move_path_wv(directoryPath, relativePath)){
+        //check if parent directory exists and is inside user home
+        std::string parentDirectory = directoryPath.substr(0, directoryPath.find_last_of(filesystem::SEPARATOR));
+        if(!filesystem::is_valid_path(parentDirectory))
+            return 0;
+        else if(!filesystem::is_inside(this->userHomeDirectory, parentDirectory))
+            return -1;
+        //file or dir with that name already exists
+        if(filesystem::is_valid_path(directoryPath))
+            return 0;
+        std::error_code ec; 
+        return std::filesystem::create_directory(directoryPath.c_str(), ec) == true;
+    }else{
+        return 0;
+    }
+}
+
+/*
+    lists the content of the given directory path
+*/
+std::vector<std::string>
+Stozer::listDirectory(const std::string &path){
+    std::vector<std::string> res;//collect entries here
+    std::error_code ec;
+    for (const auto & entry : std::filesystem::directory_iterator(path, ec)){
+        if(ec.value() != 0)
+            continue; 
+        std::string resEntry;
+        std::string pathStr = entry.path().string();
+        //file or dir
+        if(filesystem::is_txt(pathStr)){
+            std::string name = pathStr.substr(pathStr.find_last_of(filesystem::SEPARATOR) + 1);
+            name = name.substr(0, name.length()-4);
+            resEntry += "f";
+            resEntry += "    ";
+            resEntry += name;
+        }else if(entry.is_directory()){
+            std::string name = pathStr.substr(pathStr.find_last_of(filesystem::SEPARATOR) + 1);
+            resEntry += "d";
+            resEntry += "    ";
+            resEntry += name;
+        }else{
+            continue;
+        }
+        res.push_back(resEntry);
+    }
+    return res;
+}
+
+/*
+    tries to remove the directory or file at  given path
+    1 - success, 0 - fail, -1 - no permission 
+*/
+int8_t 
+Stozer::removeFileOrDir(const std::string &relativePath){
+    std::string dofPath = std::string(this->getWorkingDirectory());
+    //check if there is dir of file at path
+    if(filesystem::move_path_wv(dofPath, relativePath) && filesystem::is_valid_path(dofPath)){
+        std::string parentDirectory = dofPath.substr(0, dofPath.find_last_of(filesystem::SEPARATOR));
+        //parent directory must exist and be inside user home
+        if(!filesystem::is_valid_path(parentDirectory))
+            return 0;
+        else if(!filesystem::is_inside(this->userHomeDirectory, parentDirectory))
+            return -1;
+        //file or dir
+        if(!filesystem::is_dir(dofPath)){
+            dofPath+=".txt";//file, add extension
+        }else{
+            //dir, must be empty
+            if(!filesystem::is_dir_empty(dofPath)){
+                return 0;
+            }
+        }
+        //remove
+        std::error_code ec; 
+        return std::filesystem::remove(dofPath.c_str(), ec) == true;
+    }else{
+        return 0;
+    }
+}
 
 
+/*
+    tries to make a new .txt at given path
+    1 - success, 0 - fail, -1 - no permission 
+*/
+int8_t
+Stozer::makeFile(const std::string &relativePath){
+    std::string filePath = std::string(this->getWorkingDirectory());
+    if(filesystem::move_path_wv(filePath, relativePath)){
+        std::string parentDirectory = filePath.substr(0, filePath.find_last_of(filesystem::SEPARATOR));
+        //check if parent directory exists and is inside user home
+        if(!filesystem::is_valid_path(parentDirectory))
+            return 0;
+        else if(!filesystem::is_inside(this->userHomeDirectory, parentDirectory))
+            return -1;
+            //file or dir with that name already exists
+            if(filesystem::is_valid_path(filePath))
+                return 0;
+            filePath += ".txt";//add extension
+            std::ofstream ofs(filePath);
+            if(!ofs.is_open())
+                return 0;
+            //add header
+            ofs << filesystem::FILE_HEADER; 
+            ofs.close();
+            return 1;
+    }else{
+        return 0;
+    }
+}
+
+/*
+    tries to move/rename file or dir
+    1 - success, 0 - fail, -1 - no permission 
+*/
+int8_t
+Stozer::moveFileOrDir(const std::string &relativePath, const std::string &newRelativePath){
+    std::string dofPath = std::string(this->getWorkingDirectory());
+    std::string newDofPath = std::string(this->getWorkingDirectory());
+
+    //old path must exist
+    if(filesystem::move_path_wv(dofPath, relativePath) && filesystem::is_valid_path(dofPath) 
+        && filesystem::move_path_wv(newDofPath, newRelativePath)){
+            
+        std::string parentDirectory = dofPath.substr(0, dofPath.find_last_of(filesystem::SEPARATOR));
+        std::string newParentDirectory = newDofPath.substr(0, newDofPath.find_last_of(filesystem::SEPARATOR));
+        //dir or path
+        if(!filesystem::is_dir(dofPath)){
+            //old is file, add extension
+            dofPath+=".txt";
+            //if there is something at new path, it must be dir
+            // if it is dir, place it inside
+            if(filesystem::is_dir(newDofPath)){
+                if(newDofPath.at(newDofPath.length()-1) != filesystem::SEPARATOR)
+                    newDofPath.push_back(filesystem::SEPARATOR);
+                newParentDirectory = newDofPath;//new parent directory becomes existing dir at given path
+                newDofPath += dofPath.substr(dofPath.find_last_of(filesystem::SEPARATOR) + 1);
+                //check if there is file with that name in the dir
+                if(filesystem::is_valid_path(newDofPath))
+                    return 0;
+            }else if(filesystem::is_valid_path(newDofPath)){
+                //there is something at new path that is not dir, this is not allowed
+                return 0;
+            }else{
+                //new is file, add extension
+                newDofPath+=".txt";
+            }
+        }else{
+            //dir, must be empty and there must be nothing at new path
+            if(!filesystem::is_dir_empty(dofPath) || filesystem::is_valid_path(newDofPath))
+                return 0;
+        }
+        //both parent directories should exist and be inside user home
+        if(!filesystem::is_valid_path(parentDirectory) || !filesystem::is_valid_path(newParentDirectory))
+            return 0;
+        else if(!filesystem::is_inside(this->userHomeDirectory, parentDirectory) || 
+                    !filesystem::is_inside(this->userHomeDirectory, newParentDirectory)){
+            return -1;
+        }
+        //rename
+        std::error_code ec; 
+        std::filesystem::rename(dofPath, newDofPath, ec);
+        return ec.value() == 0;
+    }else{
+        return 0;
+    }
+}
+
+
+
+/*
+    verify that all needed directories and files are present
+*/
+void 
+Stozer::verify_file_system(){
+    for(int i=0;i<REQUIRED_PATHS.size();i++){
+        std::string path = GetWorkingDirectory();
+        filesystem::move_path(path, REQUIRED_PATHS[i]);//tries to move to given path,
+        if(path == GetWorkingDirectory()){//                    if it fails it will stay at GetWorkingDirectory()
+            PLOG_ERROR << "required path " + REQUIRED_PATHS[i] + " doesn't exist, aborting.";
+            this->shouldEnd = true;
+        }
+    }
+}
 
 }
 
@@ -520,6 +746,12 @@ int main(void){
     stz.processLoad(std::make_unique<Krsh>(stz, ""));
     stz.processLoad(std::make_unique<Sat>(stz, ""));
     stz.processLoad(std::make_unique<Kalendar>(stz, ""));
+    stz.processLoad(std::make_unique<Gde>(stz, ""));
+    stz.processLoad(std::make_unique<Idi>(stz, ""));
+    stz.processLoad(std::make_unique<Napravi>(stz, ""));
+    stz.processLoad(std::make_unique<Listaj>(stz, ""));
+    stz.processLoad(std::make_unique<Ukloni>(stz, ""));
+    stz.processLoad(std::make_unique<Pomeri>(stz, ""));
 
 
     //run krsh

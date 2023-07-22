@@ -1,4 +1,7 @@
 #include "utils.h"
+#include <raylib.h>
+#include <plog/Log.h>
+#include <filesystem>
 
 namespace stozer{
 
@@ -19,6 +22,17 @@ std::string trim_string(std::string str){
     return str.substr(strBegin, strRange);
 }
 
+
+std::string replace_all(std::string &str, const std::string& from, const std::string& to) {
+    size_t start_pos = 0;
+
+    while((start_pos = str.find(from, start_pos)) != std::string::npos) {
+        str.replace(start_pos, from.length(), to);
+        start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
+    }
+    return str;
+}
+
 /*
     tokenizes given string using given delimeter
 */
@@ -30,14 +44,15 @@ std::vector<std::string> split_string(const std::string& str, const std::string 
         result.push_back(str.substr(last, next-last));   
         last = next + 1; 
     }
-    result.push_back(str.substr(last));
+    if(last < str.length()-1)
+        result.push_back(str.substr(last));
     return result;
 } 
 
 
 /*
     splits string into two at delimeter, 
-        if there is no delimiter in string both sides will be equal to given string
+        if there is no delimiter in string first = str, second = <empty>
 */
 std::pair<std::string, std::string> split_string_into_two(const std::string& str, const std::string &delimiter){
     std::string left, right;
@@ -46,7 +61,8 @@ std::pair<std::string, std::string> split_string_into_two(const std::string& str
         left = str.substr(0, split);
         right = str.substr(split+1);
     }else{
-        left = right = str;
+        left = str;
+        right = "";
     }
 
     return std::pair<std::string, std::string>(left, right);
@@ -77,12 +93,183 @@ uint8_t days_in_a_month(const stozer::Date &date){
 }
 
 
+}
 
 
 
+
+namespace filesystem{
+
+/*
+    checks if directory or file exists at path
+*/
+bool is_valid_path(const std::string &path){
+    if(DirectoryExists(path.c_str()))
+        return true;
+    
+    if( path.length() > 4 && path.substr(path.length()-4) != ".txt" )
+        return FileExists((path+".txt").c_str()); 
+    else
+        return FileExists((path).c_str());
 
 }
 
+    
+
+
+/*
+    tries to move given path
+*/
+bool move_path(std::string &path,const std::string &relativePath){
+    if(relativePath.empty())
+        return true;
+    
+    if(relativePath.at(0) == '\\')//TODO:replace with root ? 
+        return false;
+
+    std::string pPath = std::string(path);
+    std::string rPath = std::string(relativePath);
+    string::replace_all(rPath, "/", "\\");
+    rPath += rPath.at(rPath.length()-1) != '\\' ? "\\" : "";//for easier tokenazing
+    size_t i = 0, j = rPath.find("\\");
+
+
+    while(i<j && j != std::string::npos){
+        std::string pathToken = rPath.substr(i, j-i);
+        if(pathToken == "."){
+            //stay here
+        }else if(pathToken == ".."){
+            //try to go back
+            size_t sep = pPath.find_last_of("\\");
+            if(sep != std::string::npos){
+                pPath = pPath.substr(0, sep);
+            }else{
+                return false;
+            }
+        }else{
+            //try to go forward
+            if(is_valid_path(pPath + SEPARATOR + pathToken)){
+                pPath += SEPARATOR + pathToken;
+            }else{
+                return false;
+            }
+
+        }
+        
+        i=j+1;
+        j = rPath.find("\\", j+1);
+    }
+
+    if(i==j)//multiple \\ in a row
+        return false;
+    
+    //success
+    path = pPath;
+    return true;
+}
+
+/*
+    moves path, without validation
+*/
+bool move_path_wv(std::string &path,const std::string &relativePath){
+    if(relativePath.empty())
+        return true;
+    
+    if(relativePath.at(0) == '\\')//TODO:replace with root ? 
+        return false;
+
+    std::string pPath = std::string(path);
+    std::string rPath = std::string(relativePath);
+    string::replace_all(rPath, "/", "\\");
+    rPath += rPath.at(rPath.length()-1) != '\\' ? "\\" : "";//for easier tokenazing
+    size_t i = 0, j = rPath.find("\\");
+
+
+    while(i<j && j != std::string::npos){
+        std::string pathToken = rPath.substr(i, j-i);
+        if(pathToken == "."){
+            //stay here
+        }else if(pathToken == ".."){
+            //try to go back
+            size_t sep = pPath.find_last_of("\\");
+            if(sep != std::string::npos){
+                pPath = pPath.substr(0, sep);
+            }else{
+                return false;
+            }
+        }else{
+            //try to go forward
+            if(true){
+                pPath += SEPARATOR + pathToken;
+            }else{
+                return false;
+            }
+
+        }
+        
+        i=j+1;
+        j = rPath.find("\\", j+1);
+    }
+
+    if(i==j)//multiple \\ in a row
+        return false;
+    
+    //success
+    path = pPath;
+    return true;
+}
+
+
+bool is_inside(const std::string &parent, const std::string &child){
+    return parent.length() <= child.length() &&
+        child.substr(0, parent.length()) == parent;
+}
+
+/*
+    returns relative path, starting from given root
+*/
+std::string relative_path(const std::string &rootPath, const std::string &path){
+    if(rootPath.length() < path.length() &&
+        path.substr(0, rootPath.length()) == rootPath){
+            return path.substr(rootPath.length());
+    }else if(rootPath == path){
+        return "\\";
+    }else{
+        return path;
+    }
+}
+
+
+/*
+    checks if given file exist and has .txt extension
+*/
+bool is_txt(const std::string &path){
+    return is_valid_path(path) &&
+                path.length() > 4 &&
+                    path.substr(path.length()-4) == ".txt";
+
+}
+
+/*
+    checks if there is a dir at path
+*/
+bool is_dir(const std::string &path){
+    return is_valid_path(path) && 
+        std::filesystem::is_directory(path);
+
+}
+
+/*
+    checks if the dir is empty
+*/
+bool is_dir_empty(const std::string &path){
+    return is_valid_path(path) && 
+            std::filesystem::is_empty(path);
+
+}
+
+
+}
 
 
 }
