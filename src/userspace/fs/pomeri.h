@@ -1,5 +1,5 @@
-#ifndef NAPRAVI_H
-#define NAPRAVI_H
+#ifndef POMERI_H
+#define POMERI_H
 
 #include <stozer.h>
 #include <termija.h>
@@ -9,14 +9,14 @@
 
 namespace stozer{
 
-class Napravi : public Process{
+class Pomeri : public Process{
 
 private:
-    std::string         napraviArguments;
+    std::string         pomeriArguments;
 
 
     void displayHelp();
-    
+    void recursiveMove(std::string &, std::string &);
 public:
     //cycle
     void setup() override;
@@ -28,9 +28,8 @@ public:
 
 
 
-
 public:
-    Napravi(stozer::Stozer &, const std::string &);
+    Pomeri(stozer::Stozer &, const std::string &);
 };
 
 

@@ -708,9 +708,19 @@ Stozer::moveFileOrDir(const std::string &relativePath, const std::string &newRel
                 newDofPath+=".txt";
             }
         }else{
-            //dir, must be empty and there must be nothing at new path
-            if(!filesystem::is_dir_empty(dofPath) || filesystem::is_valid_path(newDofPath))
+            //dir
+            if(filesystem::is_dir(newDofPath)){
+                if(newDofPath.at(newDofPath.length()-1) != filesystem::SEPARATOR)
+                    newDofPath.push_back(filesystem::SEPARATOR);
+                newParentDirectory = newDofPath;//new parent directory becomes existing dir at given path
+                newDofPath += dofPath.substr(dofPath.find_last_of(filesystem::SEPARATOR) + 1);
+                //check if there is file with that name in the dir
+                if(filesystem::is_valid_path(newDofPath))
+                    return 0;
+            }else if(filesystem::is_valid_path(newDofPath)){
+                //there is something at new path that is not dir, this is not allowed
                 return 0;
+            }
         }
         //both parent directories should exist and be inside user home
         if(!filesystem::is_valid_path(parentDirectory) || !filesystem::is_valid_path(newParentDirectory))

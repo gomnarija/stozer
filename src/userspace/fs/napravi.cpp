@@ -8,9 +8,6 @@
 #include <regex>
 
 namespace stozer{
-
-void display_help(std::stringstream *);
-
 Napravi::Napravi(Stozer &stozer, const std::string &arguments) : Process(stozer, arguments){
 
     this->name                  = "napravi";//unique
@@ -37,7 +34,7 @@ void Napravi::setup(){
 
     //help
     if(this->napraviArguments == "-p"){
-        display_help(this->outStream);
+        this->displayHelp();
         return;
     }
 
@@ -127,8 +124,9 @@ void Napravi::setup(){
 }
 
 
-void display_help(std::stringstream *outStream){
-    *(outStream)  << "pomoc, todo";
+void 
+Napravi::displayHelp(){
+    *(this->outStream)  << "pomoc, todo";
 }
 
 
