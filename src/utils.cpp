@@ -148,11 +148,12 @@ bool move_path(std::string &path,const std::string &relativePath, const std::str
 
     //from root
     if(rPath.at(0) == '\\'){
-        if(filesystem::is_valid_path(rootPath + rPath)){
-            path = rootPath + rPath;
-            return true;
+        if(rPath.length() > 1){
+            pPath = rootPath;
+            rPath = rPath.substr(1);
         }else{
-            return false;
+            pPath = rootPath;
+            return true;
         }
     }
 
@@ -207,10 +208,15 @@ bool move_path_wv(std::string &path,const std::string &relativePath, const std::
     string::replace_all(rPath, "/", "\\");
 
 
-     //from root
+    //from root
     if(rPath.at(0) == '\\'){
-        path = rootPath + rPath;
-        return true;
+        if(rPath.length() > 1){
+            pPath = rootPath;
+            rPath = rPath.substr(1);
+        }else{
+            pPath = rootPath;
+            return true;
+        }
     }
 
     rPath += rPath.at(rPath.length()-1) != '\\' ? "\\" : "";//for easier tokenazing
