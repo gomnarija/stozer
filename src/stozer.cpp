@@ -610,10 +610,10 @@ Stozer::listDirectory(const std::string &path){
 
 /*
     tries to remove the directory or file at  given path
-    1 - success, 0 - fail, -1 - no permission 
+    1 - success, 0 - fail, -1 - no permission, -2 - non-empty dir ( not forced )
 */
 int8_t 
-Stozer::removeFileOrDir(const std::string &relativePath){
+Stozer::removeFileOrDir(const std::string &relativePath, bool isForced){
     std::string dofPath = std::string(this->getWorkingDirectory());
     //check if there is dir of file at path
     if(filesystem::move_path_wv(dofPath, relativePath) && filesystem::is_valid_path(dofPath)){
@@ -628,13 +628,15 @@ Stozer::removeFileOrDir(const std::string &relativePath){
             dofPath+=".txt";//file, add extension
         }else{
             //dir, must be empty
-            if(!filesystem::is_dir_empty(dofPath)){
-                return 0;
+            if(!filesystem::is_dir_empty(dofPath) && !isForced){
+                return -2;
             }
         }
         //remove
-        std::error_code ec; 
-        return std::filesystem::remove(dofPath.c_str(), ec) == true;
+        std::error_code ec;
+        std::filesystem::remove_all(dofPath.c_str(), ec);
+        PLOG_DEBUG << ec.message();
+        return  ec.value() == 0;
     }else{
         return 0;
     }

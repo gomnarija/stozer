@@ -101,9 +101,9 @@ void Napravi::setup(){
             path = file;
 
         if(res == -1){
-            *(this->outStream)  << "Nemas ovlascenje za datu putanju: " + path << "\n";
+            *(this->outStream)  << "nemas ovlascenje za datu putanju: " + path << "\n";
         }else if(res == 0){
-            *(this->outStream)  << "Greska pri kreiranju novog fajla: " + path << "\n";
+            *(this->outStream)  << "greska pri kreiranju novog fajla: " + path << "\n";
         }
     }
     //create dirs
@@ -116,9 +116,9 @@ void Napravi::setup(){
             path = dir;
 
         if(res == -1){
-            *(this->outStream)  << "Nemas ovlascenje za datu putanju: " + path << "\n";
+            *(this->outStream)  << "nemas ovlascenje za datu putanju: " + path << "\n";
         }else if(res == 0){
-            *(this->outStream)  << "Greska pri kreiranju novog direktorijuma: " + path << "\n";
+            *(this->outStream)  << "greska pri kreiranju novog direktorijuma: " + path << "\n";
         }
     }
 }

@@ -163,7 +163,7 @@ public:
     bool                        changeWorkingDirectory(const std::string&);
     int8_t                      makeDirectory(const std::string&);
     std::vector<std::string>    listDirectory(const std::string&);
-    int8_t                      removeFileOrDir(const std::string&);
+    int8_t                      removeFileOrDir(const std::string&, bool);
     int8_t                      makeFile(const std::string&);
     int8_t                      moveFileOrDir(const std::string&, const std::string&);
 
