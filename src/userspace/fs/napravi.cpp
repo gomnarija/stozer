@@ -95,7 +95,7 @@ void Napravi::setup(){
     for(const auto &file : files){
         int8_t res = this->stozer.makeFile(file);
         std::string path = this->stozer.getWorkingDirectory();
-        filesystem::move_path_wv(path, file);
+        filesystem::move_path_wv(path, file,  this->stozer.getRootDirectory());
         path = filesystem::relative_path(this->stozer.getRootDirectory(), path);
         if(!filesystem::is_inside(this->stozer.getRootDirectory(), path))
             path = file;
@@ -110,7 +110,7 @@ void Napravi::setup(){
     for(const auto &dir : dirs){
         int8_t res = this->stozer.makeDirectory(dir);
         std::string path = this->stozer.getWorkingDirectory();
-        filesystem::move_path_wv(path, dir);
+        filesystem::move_path_wv(path, dir, this->stozer.getRootDirectory());
         path = filesystem::relative_path(this->stozer.getRootDirectory(), path);
         if(!filesystem::is_inside(this->stozer.getRootDirectory(), path))
             path = dir;

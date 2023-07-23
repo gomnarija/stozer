@@ -136,20 +136,30 @@ bool is_valid_path(const std::string &path){
 /*
     tries to move given path
 */
-bool move_path(std::string &path,const std::string &relativePath){
+bool move_path(std::string &path,const std::string &relativePath, const std::string &rootPath){
     if(relativePath.empty())
         return true;
     
-    if(relativePath.at(0) == '\\')//TODO:replace with root ? 
-        return false;
 
     std::string pPath = std::string(path);
     std::string rPath = std::string(relativePath);
     string::replace_all(rPath, "/", "\\");
+
+
+    //from root
+    if(rPath.at(0) == '\\'){
+        if(filesystem::is_valid_path(rootPath + rPath)){
+            path = rootPath + rPath;
+            return true;
+        }else{
+            return false;
+        }
+    }
+
+
+
     rPath += rPath.at(rPath.length()-1) != '\\' ? "\\" : "";//for easier tokenazing
     size_t i = 0, j = rPath.find("\\");
-
-
     while(i<j && j != std::string::npos){
         std::string pathToken = rPath.substr(i, j-i);
         if(pathToken == "."){
@@ -187,20 +197,24 @@ bool move_path(std::string &path,const std::string &relativePath){
 /*
     moves path, without validation
 */
-bool move_path_wv(std::string &path,const std::string &relativePath){
+bool move_path_wv(std::string &path,const std::string &relativePath, const std::string &rootPath){
     if(relativePath.empty())
         return true;
     
-    if(relativePath.at(0) == '\\')//TODO:replace with root ? 
-        return false;
 
     std::string pPath = std::string(path);
     std::string rPath = std::string(relativePath);
     string::replace_all(rPath, "/", "\\");
+
+
+     //from root
+    if(rPath.at(0) == '\\'){
+        path = rootPath + rPath;
+        return true;
+    }
+
     rPath += rPath.at(rPath.length()-1) != '\\' ? "\\" : "";//for easier tokenazing
     size_t i = 0, j = rPath.find("\\");
-
-
     while(i<j && j != std::string::npos){
         std::string pathToken = rPath.substr(i, j-i);
         if(pathToken == "."){
@@ -253,6 +267,13 @@ std::string relative_path(const std::string &rootPath, const std::string &path){
     }else{
         return path;
     }
+}
+
+/*
+    returns real path, starting from given root
+*/
+std::string real_path(const std::string &rootPath, const std::string &path){
+    return rootPath + path;
 }
 
 

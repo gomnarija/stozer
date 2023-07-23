@@ -112,11 +112,11 @@ Stozer::start(){
     //file system
     this->verify_file_system();
     this->rootDirectory = GetWorkingDirectory();
-    filesystem::move_path(this->rootDirectory, "fs");
+    filesystem::move_path(this->rootDirectory, "fs", this->getRootDirectory());
 
     //set user home
     this->userHomeDirectory = this->rootDirectory;
-    filesystem::move_path(this->userHomeDirectory, "korisnici\\rs26");
+    filesystem::move_path(this->userHomeDirectory, "korisnici\\rs26", this->getRootDirectory());
     this->workingDirectory = this->userHomeDirectory;
 }
 
@@ -543,7 +543,7 @@ Stozer::getWorkingDirectoryRelative(){
 bool 
 Stozer::changeWorkingDirectory(const std::string &relativePath){
     std::string newPath = this->workingDirectory;
-    if(filesystem::move_path(newPath, relativePath) 
+    if(filesystem::move_path(newPath, relativePath, this->getRootDirectory()) 
             && filesystem::is_dir(newPath)
                 && filesystem::is_inside(this->rootDirectory, newPath)){
         this->workingDirectory = newPath;
@@ -559,16 +559,18 @@ Stozer::changeWorkingDirectory(const std::string &relativePath){
 int8_t 
 Stozer::makeDirectory(const std::string &relativePath){
     std::string directoryPath = std::string(this->getWorkingDirectory());
-    if(filesystem::move_path_wv(directoryPath, relativePath)){
+    if(filesystem::move_path_wv(directoryPath, relativePath, this->getRootDirectory())){
         //check if parent directory exists and is inside user home
         std::string parentDirectory = directoryPath.substr(0, directoryPath.find_last_of(filesystem::SEPARATOR));
-        if(!filesystem::is_valid_path(parentDirectory))
+        if(!filesystem::is_valid_path(parentDirectory)){
             return 0;
+        }
         else if(!filesystem::is_inside(this->userHomeDirectory, parentDirectory))
             return -1;
         //file or dir with that name already exists
-        if(filesystem::is_valid_path(directoryPath))
+        if(filesystem::is_valid_path(directoryPath)){
             return 0;
+        }
         std::error_code ec; 
         return std::filesystem::create_directory(directoryPath.c_str(), ec) == true;
     }else{
@@ -616,7 +618,7 @@ int8_t
 Stozer::removeFileOrDir(const std::string &relativePath, bool isForced){
     std::string dofPath = std::string(this->getWorkingDirectory());
     //check if there is dir of file at path
-    if(filesystem::move_path_wv(dofPath, relativePath) && filesystem::is_valid_path(dofPath)){
+    if(filesystem::move_path_wv(dofPath, relativePath, this->getRootDirectory()) && filesystem::is_valid_path(dofPath)){
         std::string parentDirectory = dofPath.substr(0, dofPath.find_last_of(filesystem::SEPARATOR));
         //parent directory must exist and be inside user home
         if(!filesystem::is_valid_path(parentDirectory))
@@ -635,7 +637,6 @@ Stozer::removeFileOrDir(const std::string &relativePath, bool isForced){
         //remove
         std::error_code ec;
         std::filesystem::remove_all(dofPath.c_str(), ec);
-        PLOG_DEBUG << ec.message();
         return  ec.value() == 0;
     }else{
         return 0;
@@ -650,7 +651,7 @@ Stozer::removeFileOrDir(const std::string &relativePath, bool isForced){
 int8_t
 Stozer::makeFile(const std::string &relativePath){
     std::string filePath = std::string(this->getWorkingDirectory());
-    if(filesystem::move_path_wv(filePath, relativePath)){
+    if(filesystem::move_path_wv(filePath, relativePath, this->getRootDirectory())){
         std::string parentDirectory = filePath.substr(0, filePath.find_last_of(filesystem::SEPARATOR));
         //check if parent directory exists and is inside user home
         if(!filesystem::is_valid_path(parentDirectory))
@@ -683,8 +684,8 @@ Stozer::moveFileOrDir(const std::string &relativePath, const std::string &newRel
     std::string newDofPath = std::string(this->getWorkingDirectory());
 
     //old path must exist
-    if(filesystem::move_path_wv(dofPath, relativePath) && filesystem::is_valid_path(dofPath) 
-        && filesystem::move_path_wv(newDofPath, newRelativePath)){
+    if(filesystem::move_path_wv(dofPath, relativePath, this->getRootDirectory()) && filesystem::is_valid_path(dofPath) 
+        && filesystem::move_path_wv(newDofPath, newRelativePath, this->getRootDirectory())){
             
         std::string parentDirectory = dofPath.substr(0, dofPath.find_last_of(filesystem::SEPARATOR));
         std::string newParentDirectory = newDofPath.substr(0, newDofPath.find_last_of(filesystem::SEPARATOR));
@@ -749,7 +750,7 @@ void
 Stozer::verify_file_system(){
     for(int i=0;i<REQUIRED_PATHS.size();i++){
         std::string path = GetWorkingDirectory();
-        filesystem::move_path(path, REQUIRED_PATHS[i]);//tries to move to given path,
+        filesystem::move_path(path, REQUIRED_PATHS[i], this->getRootDirectory());//tries to move to given path,
         if(path == GetWorkingDirectory()){//                    if it fails it will stay at GetWorkingDirectory()
             PLOG_ERROR << "required path " + REQUIRED_PATHS[i] + " doesn't exist, aborting.";
             this->shouldEnd = true;

@@ -34,7 +34,7 @@ void Listaj::setup(){
     if(!this->listajArguments.empty()){
         if(this->listajArguments.find(" ") == std::string::npos){//only path should be provided in arguments str
             std::string dofPath = this->stozer.getWorkingDirectory();
-            if(filesystem::move_path(dofPath, this->listajArguments) &&//must be inside root
+            if(filesystem::move_path(dofPath, this->listajArguments, this->stozer.getRootDirectory()) &&//must be inside root
                 filesystem::is_inside(this->stozer.getRootDirectory(), dofPath)){
                 if(filesystem::is_dir(dofPath)){
                     //dir, list it
