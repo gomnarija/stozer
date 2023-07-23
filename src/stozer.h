@@ -12,7 +12,7 @@
 #include <string>
 #include <sstream>
 #include <memory>
-
+#include <filesystem>
 
 
 //forward declaration of the main function in global namespace
@@ -166,6 +166,7 @@ public:
     int8_t                      removeFileOrDir(const std::string&, bool);
     int8_t                      makeFile(const std::string&);
     int8_t                      moveFileOrDir(const std::string&, const std::string&);
+    int8_t                      copyFileOrDir(const std::string&, const std::string&, std::filesystem::copy_options);
 
 
     friend int ::main(void);

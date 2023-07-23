@@ -10,6 +10,7 @@
 #include <listaj.h>
 #include <ukloni.h>
 #include <pomeri.h>
+#include <kopiraj.h>
 
 #include <plog/Log.h>
 #include <plog/Initializers/RollingFileInitializer.h>
@@ -19,7 +20,6 @@
 #include <iostream>
 #include <direct.h>
 #include <chrono>
-#include <filesystem>
 #include <fstream>
 #include <iostream>
 
@@ -741,6 +741,73 @@ Stozer::moveFileOrDir(const std::string &relativePath, const std::string &newRel
     }
 }
 
+/*
+    tries to copy file or dir
+    1 - success, 0 - fail, -1 - no permission 
+*/
+int8_t
+Stozer::copyFileOrDir(const std::string &relativePath, const std::string &newRelativePath, std::filesystem::copy_options copyOptions){
+    std::string dofPath = std::string(this->getWorkingDirectory());
+    std::string newDofPath = std::string(this->getWorkingDirectory());
+
+    //old path must exist
+    if(filesystem::move_path_wv(dofPath, relativePath, this->getRootDirectory()) && filesystem::is_valid_path(dofPath) 
+        && filesystem::move_path_wv(newDofPath, newRelativePath, this->getRootDirectory())){
+            
+        std::string parentDirectory = dofPath.substr(0, dofPath.find_last_of(filesystem::SEPARATOR));
+        std::string newParentDirectory = newDofPath.substr(0, newDofPath.find_last_of(filesystem::SEPARATOR));
+        //dir or path
+        if(!filesystem::is_dir(dofPath)){
+            //old is file, add extension
+            dofPath+=".txt";
+            //if there is something at new path, it must be dir
+            // if it is dir, place it inside
+            if(filesystem::is_dir(newDofPath)){
+                if(newDofPath.at(newDofPath.length()-1) != filesystem::SEPARATOR)
+                    newDofPath.push_back(filesystem::SEPARATOR);
+                newParentDirectory = newDofPath;//new parent directory becomes existing dir at given path
+                newDofPath += dofPath.substr(dofPath.find_last_of(filesystem::SEPARATOR) + 1);
+                //check if there is file with that name in the dir
+                if(filesystem::is_valid_path(newDofPath))
+                    return 0;
+            }else if(filesystem::is_valid_path(newDofPath)){
+                //there is something at new path that is not dir, this is not allowed
+                return 0;
+            }else{
+                //new is file, add extension
+                newDofPath+=".txt";
+            }
+        }else{
+            //dir
+            if(filesystem::is_dir(newDofPath)){
+                if(newDofPath.at(newDofPath.length()-1) != filesystem::SEPARATOR)
+                    newDofPath.push_back(filesystem::SEPARATOR);
+                newParentDirectory = newDofPath;//new parent directory becomes existing dir at given path
+                newDofPath += dofPath.substr(dofPath.find_last_of(filesystem::SEPARATOR) + 1);
+                //check if there is file with that name in the dir
+                if(filesystem::is_valid_path(newDofPath))
+                    return 0;
+            }else if(filesystem::is_valid_path(newDofPath)){
+                //there is something at new path that is not dir, this is not allowed
+                return 0;
+            }
+        }
+        //both parent directories should exist and be inside user home
+        if(!filesystem::is_valid_path(parentDirectory) || !filesystem::is_valid_path(newParentDirectory))
+            return 0;
+        else if(!filesystem::is_inside(this->userHomeDirectory, parentDirectory) || 
+                    !filesystem::is_inside(this->userHomeDirectory, newParentDirectory)){
+            return -1;
+        }
+        //copy
+        std::error_code ec; 
+        std::filesystem::copy(dofPath, newDofPath, copyOptions, ec);
+        return ec.value() == 0;
+    }else{
+        return 0;
+    }
+}
+
 
 
 /*
@@ -778,6 +845,7 @@ int main(void){
     stz.processLoad(std::make_unique<Listaj>(stz, ""));
     stz.processLoad(std::make_unique<Ukloni>(stz, ""));
     stz.processLoad(std::make_unique<Pomeri>(stz, ""));
+    stz.processLoad(std::make_unique<Kopiraj>(stz, ""));
 
 
     //run krsh

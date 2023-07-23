@@ -54,10 +54,6 @@ void Pomeri::setup(){
 }
 
 
-void 
-Pomeri::displayHelp(){
-    *(this->outStream)  << "pomoc, todo";
-}
 
 
 
