@@ -34,10 +34,10 @@ void Listaj::setup(){
     if(!this->listajArguments.empty()){
         if(this->listajArguments.find(" ") == std::string::npos){//only path should be provided in arguments str
             std::string dofPath = this->stozer.getWorkingDirectory();
-            if(filesystem::move_path(dofPath, this->listajArguments)){
+            if(filesystem::move_path(dofPath, this->listajArguments) &&//must be inside root
+                filesystem::is_inside(this->stozer.getRootDirectory(), dofPath)){
                 if(filesystem::is_dir(dofPath)){
                     //dir, list it
-                    PLOG_DEBUG << dofPath;
                     entries = this->stozer.listDirectory(dofPath);
                 }else{
                     //file, print it's path
@@ -46,12 +46,14 @@ void Listaj::setup(){
                 }
             }else{
                 //error: unknown path
-                *(this->outStream)  << "putanja \"" + this->listajArguments + "\" nije pronadjena."; 
+                *(this->outStream)  << "putanja \"" + this->listajArguments + "\" nije pronadjena.";
+                return; 
             }
         }else{
             //error: unknown argument
             std::string trailingArgument = string::split_string(this->listajArguments, " ").at(1);
             *(this->outStream)  << "argument \"" + trailingArgument + "\" nije prepoznat. pravilna upotreba komande je: listaj <putanja>.";
+            return;
         }
     }else{
         entries = this->stozer.listDirectory(this->stozer.getWorkingDirectory());

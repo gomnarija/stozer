@@ -60,7 +60,7 @@ std::vector<std::string> split_string(const std::string& str, const std::string 
         result.push_back(str.substr(last, next-last));   
         last = next + 1; 
     }
-    if(last < str.length()-1)
+    if(last <= str.length()-1)
         result.push_back(str.substr(last));
     return result;
 } 
