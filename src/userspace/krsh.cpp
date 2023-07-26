@@ -143,8 +143,14 @@ void Krsh::update(){
                                         // maybe add TextBox function that adds newline flag at the end
             //print outStream
             std::vector<std::string> lines = string::split_string(this->krshOutStream.str(), "\n");
-            for(const auto &line : lines){
-                this->textBox->insertLineAtCursor(line.c_str());
+            for(size_t i=0;i<lines.size();i++){
+                if(i<lines.size()-1){
+                    this->textBox->insertLineAtCursor(lines.at(i).c_str());
+                }else{
+                    //dont new line the last one, there will be new line in next_command
+                    this->textBox->insertAtCursor(lines.at(i).c_str());
+                }
+            
             }
             
             this->krshOutStream.str(std::string());;

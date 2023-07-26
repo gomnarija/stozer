@@ -1,17 +1,6 @@
 #include "stozer.h"
 #include <termija.h>
 #include <utils.h>
-#include <krsh.h>
-#include <sat.h>
-#include <kalendar.h>
-#include <gde.h>
-#include <idi.h>
-#include <napravi.h>
-#include <listaj.h>
-#include <ukloni.h>
-#include <pomeri.h>
-#include <kopiraj.h>
-
 #include <plog/Log.h>
 #include <plog/Initializers/RollingFileInitializer.h>
 
@@ -554,7 +543,7 @@ Stozer::changeWorkingDirectory(const std::string &relativePath){
 
 /*
     tries to make a new directory at  given path
-    1 - success, 0 - fail, -1 - no permission 
+    1 - success, 0 - fail, -1 - no permission , -2 - invalid name
 */
 int8_t 
 Stozer::makeDirectory(const std::string &relativePath){
@@ -562,11 +551,15 @@ Stozer::makeDirectory(const std::string &relativePath){
     if(filesystem::move_path_wv(directoryPath, relativePath, this->getRootDirectory())){
         //check if parent directory exists and is inside user home
         std::string parentDirectory = directoryPath.substr(0, directoryPath.find_last_of(filesystem::SEPARATOR));
+        std::string name = filesystem::get_name(directoryPath);
         if(!filesystem::is_valid_path(parentDirectory)){
             return 0;
+        }else if(!filesystem::is_valid_name(name)){
+            return -2;
         }
-        else if(!filesystem::is_inside(this->userHomeDirectory, parentDirectory))
+        else if(!filesystem::is_inside(this->userHomeDirectory, parentDirectory)){
             return -1;
+        }
         //file or dir with that name already exists
         if(filesystem::is_valid_path(directoryPath)){
             return 0;
@@ -646,29 +639,35 @@ Stozer::removeFileOrDir(const std::string &relativePath, bool isForced){
 
 /*
     tries to make a new .txt at given path
-    1 - success, 0 - fail, -1 - no permission 
+    1 - success, 0 - fail, -1 - no permission, -2 - invalid name
 */
 int8_t
 Stozer::makeFile(const std::string &relativePath){
     std::string filePath = std::string(this->getWorkingDirectory());
     if(filesystem::move_path_wv(filePath, relativePath, this->getRootDirectory())){
         std::string parentDirectory = filePath.substr(0, filePath.find_last_of(filesystem::SEPARATOR));
+        std::string name = filesystem::get_name(filePath);
         //check if parent directory exists and is inside user home
-        if(!filesystem::is_valid_path(parentDirectory))
+        if(!filesystem::is_valid_path(parentDirectory)){
             return 0;
-        else if(!filesystem::is_inside(this->userHomeDirectory, parentDirectory))
+        }else if(!filesystem::is_valid_name(name)){
+            return -2;
+        }
+        else if(!filesystem::is_inside(this->userHomeDirectory, parentDirectory)){
             return -1;
-            //file or dir with that name already exists
-            if(filesystem::is_valid_path(filePath))
-                return 0;
-            filePath += ".txt";//add extension
-            std::ofstream ofs(filePath);
-            if(!ofs.is_open())
-                return 0;
-            //add header
-            ofs << filesystem::FILE_HEADER; 
-            ofs.close();
-            return 1;
+        }
+        
+        //file or dir with that name already exists
+        if(filesystem::is_valid_path(filePath))
+            return 0;
+        filePath += ".txt";//add extension
+        std::ofstream ofs(filePath);
+        if(!ofs.is_open())
+            return 0;
+        //add header
+        ofs << filesystem::FILE_HEADER; 
+        ofs.close();
+        return 1;
     }else{
         return 0;
     }
@@ -676,7 +675,7 @@ Stozer::makeFile(const std::string &relativePath){
 
 /*
     tries to move/rename file or dir
-    1 - success, 0 - fail, -1 - no permission 
+    1 - success, 0 - fail, -1 - no permission, -2 - invalid name 
 */
 int8_t
 Stozer::moveFileOrDir(const std::string &relativePath, const std::string &newRelativePath){
@@ -689,6 +688,11 @@ Stozer::moveFileOrDir(const std::string &relativePath, const std::string &newRel
             
         std::string parentDirectory = dofPath.substr(0, dofPath.find_last_of(filesystem::SEPARATOR));
         std::string newParentDirectory = newDofPath.substr(0, newDofPath.find_last_of(filesystem::SEPARATOR));
+        std::string name = filesystem::get_name(newDofPath);
+        if(!filesystem::is_valid_name(name)){
+            return -2;
+        }
+
         //dir or path
         if(!filesystem::is_dir(dofPath)){
             //old is file, add extension
@@ -756,6 +760,11 @@ Stozer::copyFileOrDir(const std::string &relativePath, const std::string &newRel
             
         std::string parentDirectory = dofPath.substr(0, dofPath.find_last_of(filesystem::SEPARATOR));
         std::string newParentDirectory = newDofPath.substr(0, newDofPath.find_last_of(filesystem::SEPARATOR));
+        std::string name = filesystem::get_name(newDofPath);
+        if(!filesystem::is_valid_name(name)){
+            return -2;
+        }
+        
         //dir or path
         if(!filesystem::is_dir(dofPath)){
             //old is file, add extension
@@ -827,41 +836,3 @@ Stozer::verify_file_system(){
 
 }
 
-using namespace stozer;
-
-//start here
-int main(void){
-    Stozer &stz = Stozer::instance();
-
-    stz.start();
-
-    //load programs
-    stz.processLoad(std::make_unique<Krsh>(stz, ""));
-    stz.processLoad(std::make_unique<Sat>(stz, ""));
-    stz.processLoad(std::make_unique<Kalendar>(stz, ""));
-    stz.processLoad(std::make_unique<Gde>(stz, ""));
-    stz.processLoad(std::make_unique<Idi>(stz, ""));
-    stz.processLoad(std::make_unique<Napravi>(stz, ""));
-    stz.processLoad(std::make_unique<Listaj>(stz, ""));
-    stz.processLoad(std::make_unique<Ukloni>(stz, ""));
-    stz.processLoad(std::make_unique<Pomeri>(stz, ""));
-    stz.processLoad(std::make_unique<Kopiraj>(stz, ""));
-
-
-    //run krsh
-    stz.processRun("krsh", "", stz.logStream);
-
-
-
-    while(!stz.shouldEnd){
-         stz.update();
-    }
-
-    PLOG_DEBUG << "muda";
-
-    stz.end();
-
-
-
-    return 0;
-}

@@ -104,6 +104,8 @@ void Napravi::setup(){
             *(this->outStream)  << "nemas ovlascenje za datu putanju: " + path << "\n";
         }else if(res == 0){
             *(this->outStream)  << "greska pri kreiranju novog fajla: " + path << "\n";
+        }else if(res == -2){
+            *(this->outStream)  << "greska pri kreiranju novog fajla, naziv fajla je nevazeci: " + filesystem::get_name(path) << "\n";
         }
     }
     //create dirs
@@ -119,6 +121,8 @@ void Napravi::setup(){
             *(this->outStream)  << "nemas ovlascenje za datu putanju: " + path << "\n";
         }else if(res == 0){
             *(this->outStream)  << "greska pri kreiranju novog direktorijuma: " + path << "\n";
+        }else if(res == -2){
+            *(this->outStream)  << "greska pri kreiranju novog direktorijuma, naziv direktorijuma je nevazeci: " + filesystem::get_name(path) << "\n";
         }
     }
 }

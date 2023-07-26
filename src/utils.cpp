@@ -2,6 +2,7 @@
 #include <raylib.h>
 #include <plog/Log.h>
 #include <filesystem>
+#include <algorithm>
 
 namespace stozer{
 
@@ -120,6 +121,11 @@ namespace filesystem{
     checks if directory or file exists at path
 */
 bool is_valid_path(const std::string &path){
+    //raylib threats this as valid, it shouldn't be
+    if(path.find("...") != std::string::npos){
+        return false;
+    }
+
     if(DirectoryExists(path.c_str()))
         return true;
     
@@ -130,7 +136,30 @@ bool is_valid_path(const std::string &path){
 
 }
 
-    
+bool _is_not_alphanum_or_underscore(char c){
+    return !(isalnum(c) || c == '_');
+}
+
+/*
+    alphanumeric and '_'
+*/
+bool is_valid_name(const std::string &name){
+    return find_if(name.begin(), name.end(), _is_not_alphanum_or_underscore) == name.end();
+}
+
+
+std::string get_name(const std::string &name){
+    if(name.empty())
+        return "";
+
+    std::string nname = std::string(name);
+    string::replace_all(nname, "/", "\\");
+
+    size_t start    = nname.find_last_of(SEPARATOR)+1;
+    start           = start == std::string::npos ? 0 : start;
+    size_t end      = nname.at(nname.size()-1) == SEPARATOR ? nname.size()-1 : nname.size();
+    return nname.substr(start, end);
+}
 
 
 /*
@@ -173,7 +202,11 @@ bool move_path(std::string &path,const std::string &relativePath, const std::str
             }else{
                 return false;
             }
-        }else{
+        }else if(pathToken == "..."){
+            //this is invalid, but Windows used to thread it as "go to grandparent directory"
+            return false;
+        }
+        else{
             //try to go forward
             if(is_valid_path(pPath + SEPARATOR + pathToken)){
                 pPath += SEPARATOR + pathToken;

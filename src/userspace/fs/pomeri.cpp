@@ -47,6 +47,8 @@ void Pomeri::setup(){
             *(this->outStream)  << "nemas ovlascenje za datu putanju.";
         }else if(res == 0){
             *(this->outStream)  << "greska pri pomeranju. nevazeca putanja, ili na njoj nesto vec postoji.";
+        }else if(res == -2){
+            *(this->outStream)  << "greska pri pomeranju. novi naziv je nevazeci: " + filesystem::get_name(newName);
         }
     }else{
         *(this->outStream)  << "nazivi nisu prosledjeni. pravilna upotreba komande je: pomeri <stara_putanja> <nova_putanja>."; 
