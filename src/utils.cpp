@@ -117,6 +117,11 @@ uint8_t days_in_a_month(const stozer::Date &date){
 
 namespace filesystem{
 
+
+std::string _separator_replace(std::string &path){
+    return string::replace_all(path, "/", "\\");
+}
+
 /*
     checks if directory or file exists at path
 */
@@ -153,7 +158,7 @@ std::string get_name(const std::string &name){
         return "";
 
     std::string nname = std::string(name);
-    string::replace_all(nname, "/", "\\");
+    _separator_replace(nname);
 
     size_t start    = nname.find_last_of(SEPARATOR)+1;
     start           = start == std::string::npos ? 0 : start;
@@ -172,7 +177,7 @@ bool move_path(std::string &path,const std::string &relativePath, const std::str
 
     std::string pPath = std::string(path);
     std::string rPath = std::string(relativePath);
-    string::replace_all(rPath, "/", "\\");
+    _separator_replace(rPath);
 
 
     //from root
@@ -181,7 +186,7 @@ bool move_path(std::string &path,const std::string &relativePath, const std::str
             pPath = rootPath;
             rPath = rPath.substr(1);
         }else{
-            pPath = rootPath;
+            path = rootPath;
             return true;
         }
     }
@@ -238,7 +243,7 @@ bool move_path_wv(std::string &path,const std::string &relativePath, const std::
 
     std::string pPath = std::string(path);
     std::string rPath = std::string(relativePath);
-    string::replace_all(rPath, "/", "\\");
+    _separator_replace(rPath);
 
 
     //from root
@@ -247,7 +252,7 @@ bool move_path_wv(std::string &path,const std::string &relativePath, const std::
             pPath = rootPath;
             rPath = rPath.substr(1);
         }else{
-            pPath = rootPath;
+            path = rootPath;
             return true;
         }
     }

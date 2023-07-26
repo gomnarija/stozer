@@ -11,7 +11,16 @@ set(TERMIJA_SOURCE_DIR ${CMAKE_SOURCE_DIR}/termija/src)
 add_subdirectory(termija termija_build)
 add_subdirectory(${SOURCE_DIR} build)
 
+#lib
+add_library(${PROJECT_NAME}lib ${SOURCE_FILES})
+target_include_directories(${PROJECT_NAME}lib PRIVATE ${SOURCE_DIR} ${SOURCE_DIR}/userspace ${SOURCE_DIR}/userspace/fs ${TERMIJA_SOURCE_DIR})
+target_link_libraries(${PROJECT_NAME}lib PRIVATE termija raylib plog)
 
-add_executable(stozer ${SOURCE_FILES})
-target_include_directories(stozer PRIVATE ${SOURCE_DIR} ${SOURCE_DIR}/userspace ${TERMIJA_SOURCE_DIR})
-target_link_libraries(stozer PRIVATE termija raylib plog)
+
+#exe
+add_executable(${PROJECT_NAME} ${SOURCE_DIR}/main.cpp)
+target_include_directories(${PROJECT_NAME} PRIVATE ${SOURCE_DIR} ${SOURCE_DIR}/userspace ${SOURCE_DIR}/userspace/fs ${TERMIJA_SOURCE_DIR})
+target_link_libraries(stozer PRIVATE ${PROJECT_NAME}lib termija raylib plog)
+
+#tests
+add_subdirectory(tests)

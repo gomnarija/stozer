@@ -14,9 +14,6 @@ class Pomeri : public Process{
 private:
     std::string         pomeriArguments;
 
-
-    void displayHelp();
-    void recursiveMove(std::string &, std::string &);
 public:
     //cycle
     void setup() override;

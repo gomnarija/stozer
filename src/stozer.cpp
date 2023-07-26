@@ -764,7 +764,7 @@ Stozer::copyFileOrDir(const std::string &relativePath, const std::string &newRel
         if(!filesystem::is_valid_name(name)){
             return -2;
         }
-        
+
         //dir or path
         if(!filesystem::is_dir(dofPath)){
             //old is file, add extension
