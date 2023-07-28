@@ -64,8 +64,7 @@ void Krsh::setup(){
 
     //config TODO
     this->configMap.emplace("ime", "laza");
-    this->handle = "%ime@stozer>";
-
+    this->handle = "%ime@stožer>";
     //startup
     next_command(this->textBox, this->handle, &(this->configMap), &(this->commandStartIndex), this->maxTextBoxTextLength);
 
@@ -79,7 +78,7 @@ void Krsh::setup(){
 void Krsh::update(){
 
     //Keyboard input
-    char pressedChar = this->stozer.getPressedChar();
+    std::string inputTxt = this->stozer.getInputTxt();
     KeyboardKey key = this->stozer.getPressedKey();
 
     //case
@@ -87,8 +86,8 @@ void Krsh::update(){
         stozer.caseToggle();
 
     //textBox input
-    if(pressedChar > 0 && (this->textBox->getCurrentIndex() - commandStartIndex) <= maxCommandLength){
-        this->textBox->insertAtCursor(std::string(1, pressedChar).c_str());
+    if(!inputTxt.empty() && (this->textBox->getCurrentIndex() - commandStartIndex) <= maxCommandLength){
+        this->textBox->insertAtCursor(inputTxt.c_str());
         textBox->scrollToEnd();
     }
 
@@ -196,12 +195,12 @@ void Krsh::cleanup(){
         on success return 1, on fail 0, on exit -1
 */
 int8_t Krsh::built_in_commands(const std::string &command, const std::string &arguments){
-    if(command == "izadji"){
+    if(command == "izađi"){
         this->stozer.processTerminate(this->PID);
         return -1;
     }
     
-    if(command == "ocisti"){
+    if(command == "očisti"){
         this->textBox->clear();
         return 1;
     }
@@ -279,7 +278,7 @@ void error_process_not_found(termija::TextBox *textBox, const std::string &proce
                                         // maybe add TextBox function that adds newline flag at the end
 
     std::stringstream error;
-    error << "Komanda '" << processName << "'" << " nije pronadjena. Proveri da li je ispravno unesena pa probaj ponovo. "
+    error << "Komanda '" << processName << "'" << " nije pronađena. Proveri da li je ispravno unesena pa probaj ponovo. "
     << " Iskoristi komandu 'pomozi' za listu svih dozvoljenih komandi.";
     textBox->insertAtCursor(error.str().c_str());
 

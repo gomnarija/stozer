@@ -144,7 +144,7 @@ public:
     
     //keyboard
     KeyboardKey     getPressedKey();
-    char            getPressedChar();
+    std::string     getInputTxt();
     void            caseToggle();
     void            setUpperCase();
     void            setLowerCase();
@@ -179,6 +179,7 @@ private://accessible only from main
 };
 
 const size_t        SPECIAL_KEYS_SIZE = 32;
+const size_t        LAT_KEYS_SIZE = 16;
 const KeyboardKey   SPECIAL_KEYS[SPECIAL_KEYS_SIZE] = {
     KEY_UP,
     KEY_DOWN,
@@ -218,28 +219,17 @@ const char          SPECIAL_CHARS[SPECIAL_KEYS_SIZE] = {
     '\''
 };
 
-
-const std::unordered_map< char, char > SHIFTED = {
-    {'1', '!'},
-    {'2','@'},
-    {'3','#'},
-    {'4','$'},
-    {'5','%'},
-    {'6','^'},
-    {'7','&'},
-    {'8','*'},
-    {'9','('},
-    {'0',')'},
-    {'-','_'},
-    {'=','+'},
-    {',','<'},
-    {'.','>'},
-    {'/','?'},
-    {';',':'},
-    {'\'','"'},
-    {'[','{'},
-    {']','}'},
-    {'\\','|'}
+const int          LAT_CHARS[LAT_KEYS_SIZE] = {
+    353,//'š',
+    352,//'Š',
+    273,//'đ',
+    272,//'Đ',
+    382,//'ž',
+    381,//'Ž',
+    269,//'č',
+    268,//'Č',
+    263,//'ć',
+    262//'Ć'
 };
 
 

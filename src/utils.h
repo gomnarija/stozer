@@ -44,6 +44,7 @@ std::string                                 real_path(const std::string &, const
 bool                                        is_txt(const std::string &);
 bool                                        is_dir(const std::string &);
 bool                                        is_dir_empty(const std::string &);
+std::u32string                              path_to_u32(const std::string &);
 
 };
 

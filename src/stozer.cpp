@@ -353,7 +353,7 @@ bool _is_special(KeyboardKey key){
 /*
     helper, checks if given key is special char ( as defined in stozer.h )
 */
-bool _is_special(char key){
+bool _is_special(int key){
     for(int i=0;i<SPECIAL_KEYS_SIZE;i++){
         if(key == SPECIAL_CHARS[i])
             return true;
@@ -366,17 +366,6 @@ bool _is_special(char key){
 */
 char _to_lowercase(char c){
     return c + 32;
-}
-
-/*
-    tries changing given character to alternative one ( as defined in stozer.h ),
-        on fail returns given character
-*/
-char _shift(char c){
-    if(SHIFTED.find(c) != SHIFTED.end())
-        return SHIFTED.at(c);
-
-    return c;
 }
 
 
@@ -395,37 +384,40 @@ Stozer::getPressedKey(){
     return key;
 }
 
-/*
-    tries to convert front of the key buffer to a character,
-        on fail returns 0;
+std::string _utf8chr(int cp)
+{
+    char c[5]={ 0x00,0x00,0x00,0x00,0x00 };
+    if     (cp<=0x7F) { c[0] = cp;  }
+    else if(cp<=0x7FF) { c[0] = (cp>>6)+192; c[1] = (cp&63)+128; }
+    else if(0xd800<=cp && cp<=0xdfff) {} //invalid block of utf8
+    else if(cp<=0xFFFF) { c[0] = (cp>>12)+224; c[1]= ((cp>>6)&63)+128; c[2]=(cp&63)+128; }
+    else if(cp<=0x10FFFF) { c[0] = (cp>>18)+240; c[1] = ((cp>>12)&63)+128; c[2] = ((cp>>6)&63)+128; c[3]=(cp&63)+128; }
+    return std::string(c);
+}
 
-    NOTE: alphanumeric, blank space
+bool _is_lat(int c){
+    for(int i=0;i<LAT_KEYS_SIZE;i++){
+        if(c == LAT_CHARS[i])
+            return true;
+    }
+    return false;
+}
+
+/*
+    returns pressed character
+    NOTE: alphanumeric, special,  blank space
     NOTE: Doesn't pop the key queue
 */
-char
-Stozer::getPressedChar(){
-    if(this->keyQueue.empty())
-        return 0;
-
-    KeyboardKey key = this->keyQueue.front();
-    char c = (char)key;
-    char res = 0;
-
-    //togle uppercase if shifted
-    isUpperCase = isShifted ? !isUpperCase : isUpperCase;
-    
-    if(std::isalnum(c) || _is_special(c)){
-        if(!isUpperCase && std::isalpha(key))
-            res =  _to_lowercase(key);
-        else if(!std::isalpha(key))
-            res = isShifted ? _shift((char)key) : key;
-        else
-            res = key;
+std::string
+Stozer::getInputTxt(){
+    std::stringstream ss;
+    int key = GetCharPressed();
+    while(key > 0){
+        if(isalnum(key) || _is_lat(key) || _is_special(key))
+            ss << _utf8chr(key);
+        key = GetCharPressed();
     }
-
-    //toggle upercase back
-    isUpperCase = isShifted ? !isUpperCase : isUpperCase;
-    return res;
+    return ss.str();
 }
 
 
@@ -565,7 +557,7 @@ Stozer::makeDirectory(const std::string &relativePath){
             return 0;
         }
         std::error_code ec; 
-        return std::filesystem::create_directory(directoryPath.c_str(), ec) == true;
+        return std::filesystem::create_directory(filesystem::path_to_u32(directoryPath), ec) == true;
     }else{
         return 0;
     }
@@ -578,7 +570,7 @@ std::vector<std::string>
 Stozer::listDirectory(const std::string &path){
     std::vector<std::string> res;//collect entries here
     std::error_code ec;
-    for (const auto & entry : std::filesystem::directory_iterator(path, ec)){
+    for (const auto & entry : std::filesystem::directory_iterator(filesystem::path_to_u32(path), ec)){
         if(ec.value() != 0)
             continue; 
         std::string resEntry;
@@ -629,7 +621,7 @@ Stozer::removeFileOrDir(const std::string &relativePath, bool isForced){
         }
         //remove
         std::error_code ec;
-        std::filesystem::remove_all(dofPath.c_str(), ec);
+        std::filesystem::remove_all(filesystem::path_to_u32(dofPath), ec);
         return  ec.value() == 0;
     }else{
         return 0;
@@ -661,7 +653,7 @@ Stozer::makeFile(const std::string &relativePath){
         if(filesystem::is_valid_path(filePath))
             return 0;
         filePath += ".txt";//add extension
-        std::ofstream ofs(filePath);
+        std::ofstream ofs(std::filesystem::u8path(filePath));
         if(!ofs.is_open())
             return 0;
         //add header
@@ -738,7 +730,7 @@ Stozer::moveFileOrDir(const std::string &relativePath, const std::string &newRel
         }
         //rename
         std::error_code ec; 
-        std::filesystem::rename(dofPath, newDofPath, ec);
+        std::filesystem::rename(filesystem::path_to_u32(dofPath), filesystem::path_to_u32(newDofPath), ec);
         return ec.value() == 0;
     }else{
         return 0;
@@ -810,7 +802,7 @@ Stozer::copyFileOrDir(const std::string &relativePath, const std::string &newRel
         }
         //copy
         std::error_code ec; 
-        std::filesystem::copy(dofPath, newDofPath, copyOptions, ec);
+        std::filesystem::copy(filesystem::path_to_u32(dofPath), filesystem::path_to_u32(newDofPath), copyOptions, ec);
         return ec.value() == 0;
     }else{
         return 0;

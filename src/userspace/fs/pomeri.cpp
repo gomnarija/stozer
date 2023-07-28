@@ -44,14 +44,14 @@ void Pomeri::setup(){
         
         int8_t res = this->stozer.moveFileOrDir(oldName, newName);
         if(res == -1){
-            *(this->outStream)  << "nemas ovlascenje za datu putanju.";
+            *(this->outStream)  << "nemaš ovlašćenje za datu putanju.";
         }else if(res == 0){
-            *(this->outStream)  << "greska pri pomeranju. nevazeca putanja, ili na njoj nesto vec postoji.";
+            *(this->outStream)  << "greška pri pomeranju. nevažeća putanja, ili na njoj nesto već postoji.";
         }else if(res == -2){
-            *(this->outStream)  << "greska pri pomeranju. novi naziv je nevazeci: " + filesystem::get_name(newName);
+            *(this->outStream)  << "greška pri pomeranju. novi naziv je nevažeći: " + filesystem::get_name(newName);
         }
     }else{
-        *(this->outStream)  << "nazivi nisu prosledjeni. pravilna upotreba komande je: pomeri <stara_putanja> <nova_putanja>."; 
+        *(this->outStream)  << "nazivi nisu prosleđeni. pravilna upotreba komande je: pomeri <stara_putanja> <nova_putanja>."; 
     }
 }
 

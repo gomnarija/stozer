@@ -3,6 +3,7 @@
 #include <plog/Log.h>
 #include <filesystem>
 #include <algorithm>
+#include <rope.h>
 
 namespace stozer{
 
@@ -131,25 +132,53 @@ bool is_valid_path(const std::string &path){
         return false;
     }
 
-    if(DirectoryExists(path.c_str()))
+    if(std::filesystem::is_directory(path_to_u32(path))){
         return true;
+    }
     
-    if( path.length() > 4 && path.substr(path.length()-4) != ".txt" )
-        return FileExists((path+".txt").c_str()); 
-    else
-        return FileExists((path).c_str());
-
+    if( path.length() > 4 && path.substr(path.length()-4) != ".txt" ){
+        return std::filesystem::is_regular_file(path_to_u32(path + ".txt"));
+    }else{
+        return std::filesystem::is_regular_file(path_to_u32(path));
+    }
+    
+    
 }
 
-bool _is_not_alphanum_or_underscore(char c){
-    return !(isalnum(c) || c == '_');
+bool _is_lat(int c){
+    for(int i=0;i<LAT_KEYS_SIZE;i++){
+        if(c == LAT_CHARS[i])
+            return true;
+    }
+    return false;
+}
+
+bool _is_not_alphanum_or_underscore(int c){
+    return !(isalnum(c) || c == '_' || _is_lat(c));
 }
 
 /*
     alphanumeric and '_'
 */
 bool is_valid_name(const std::string &name){
-    return find_if(name.begin(), name.end(), _is_not_alphanum_or_underscore) == name.end();
+    if(name.empty())
+        return false;
+
+    const char *s;
+    s =name.c_str();
+    int p = 0, i = 0;
+    size_t size = ustrlen(s); 
+    while(i < size){
+        int c = GetCodepoint(s, &p);
+        if(_is_not_alphanum_or_underscore(c))
+            return false;
+        //invalid
+        if (c == 0x3f)
+            return false;
+
+        i+=p;
+    }
+    return true;
 }
 
 
@@ -336,7 +365,7 @@ bool is_txt(const std::string &path){
 */
 bool is_dir(const std::string &path){
     return is_valid_path(path) && 
-        std::filesystem::is_directory(path);
+        std::filesystem::is_directory(path_to_u32(path));
 
 }
 
@@ -345,9 +374,15 @@ bool is_dir(const std::string &path){
 */
 bool is_dir_empty(const std::string &path){
     return is_valid_path(path) && 
-            std::filesystem::is_empty(path);
+            std::filesystem::is_empty(path_to_u32(path));
 
 }
+
+std::u32string path_to_u32(const std::string &path){
+    std::filesystem::path pu = std::filesystem::u8path(path);
+    return pu.u32string();
+}
+
 
 
 }

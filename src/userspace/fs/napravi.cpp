@@ -50,7 +50,7 @@ void Napravi::setup(){
                     lastToken = token;
                     continue;
                 }else{
-                    *(this->outStream)  << "nepravilno uneseni argumenti. unesi argument -p za pomoc.";
+                    *(this->outStream)  << "nepravilno uneseni argumenti. unesi argument -p za pomoć.";
                     return;
                 }
             }else{
@@ -67,12 +67,12 @@ void Napravi::setup(){
                         lastToken = token;
                     }else if(lastToken == "-p"){
                         //wrong use of help argument
-                        *(this->outStream)  << "nepravilno uneseni argumenti. unesi argument -p za pomoc.";
+                        *(this->outStream)  << "nepravilno uneseni argumenti. unesi argument -p za pomoć.";
                         return;
                     }
                     else{
                         //unknown arg
-                        *(this->outStream)  << "argument \"" + lastToken + "\" nije prepoznat. unesi argument -p za pomoc.";
+                        *(this->outStream)  << "argument \"" + lastToken + "\" nije prepoznat. unesi argument -p za pomoć.";
                         return;
                     }
                 }else{
@@ -84,11 +84,11 @@ void Napravi::setup(){
         }
         //arg can't be last
         if(!lastToken.empty() && lastToken.at(0) == '-'){
-            *(this->outStream)  << "nepravilno uneseni argumenti. unesi argument -p za pomoc.";
+            *(this->outStream)  << "nepravilno uneseni argumenti. unesi argument -p za pomoć.";
             return;
         }
     }else{
-        *(this->outStream)  << "naziv nije prosledjen. unesi argument -p za pomoc.";
+        *(this->outStream)  << "naziv nije prosleđen. unesi argument -p za pomoć.";
         return;
     }
     //create files
@@ -101,11 +101,11 @@ void Napravi::setup(){
             path = file;
 
         if(res == -1){
-            *(this->outStream)  << "nemas ovlascenje za datu putanju: " + path << "\n";
+            *(this->outStream)  << "nemaš ovlašćenje za datu putanju: " + path << "\n";
         }else if(res == 0){
-            *(this->outStream)  << "greska pri kreiranju novog fajla: " + path << "\n";
+            *(this->outStream)  << "greška pri kreiranju novog fajla: " + path << "\n";
         }else if(res == -2){
-            *(this->outStream)  << "greska pri kreiranju novog fajla, naziv fajla je nevazeci: " + filesystem::get_name(path) << "\n";
+            *(this->outStream)  << "greška pri kreiranju novog fajla, naziv fajla je nevažeći: " + filesystem::get_name(path) << "\n";
         }
     }
     //create dirs
@@ -118,11 +118,11 @@ void Napravi::setup(){
             path = dir;
 
         if(res == -1){
-            *(this->outStream)  << "nemas ovlascenje za datu putanju: " + path << "\n";
+            *(this->outStream)  << "nemaš ovlašćenje za datu putanju: " + path << "\n";
         }else if(res == 0){
-            *(this->outStream)  << "greska pri kreiranju novog direktorijuma: " + path << "\n";
+            *(this->outStream)  << "greška pri kreiranju novog direktorijuma: " + path << "\n";
         }else if(res == -2){
-            *(this->outStream)  << "greska pri kreiranju novog direktorijuma, naziv direktorijuma je nevazeci: " + filesystem::get_name(path) << "\n";
+            *(this->outStream)  << "greška pri kreiranju novog direktorijuma, naziv direktorijuma je nevažeći: " + filesystem::get_name(path) << "\n";
         }
     }
 }
