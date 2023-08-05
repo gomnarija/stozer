@@ -13,6 +13,10 @@ ${SOURCE_DIR}/userspace/fs/napravi.cpp
 ${SOURCE_DIR}/userspace/fs/ukloni.cpp
 ${SOURCE_DIR}/userspace/fs/pomeri.cpp
 ${SOURCE_DIR}/userspace/fs/kopiraj.cpp
+${SOURCE_DIR}/userspace/uredi/uredi.cpp
+${SOURCE_DIR}/userspace/uredi/tui.cpp
+${SOURCE_DIR}/userspace/uredi/input.cpp
+${SOURCE_DIR}/userspace/uredi/files.cpp
 ${SOURCE_DIR}/userspace/sat.cpp)
 set(SOURCE_FILES ${SOURCE_FILES} PARENT_SCOPE)
 #header files
@@ -29,5 +33,6 @@ ${SOURCE_DIR}/userspace/fs/napravi.h
 ${SOURCE_DIR}/userspace/fs/ukloni.h
 ${SOURCE_DIR}/userspace/fs/pomeri.h
 ${SOURCE_DIR}/userspace/fs/kopiraj.h
+${SOURCE_DIR}/userspace/uredi/uredi.h
 ${SOURCE_DIR}/userspace/sat.h)
 set(HEADER_FILES ${HEADER_FILES} PARENT_SCOPE)

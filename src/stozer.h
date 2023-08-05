@@ -90,7 +90,8 @@ private:
     std::queue<KeyboardKey>                                     keyQueue;
     
     bool                                                        isUpperCase;
-    bool                                                        isShifted;
+    bool                                                        isShifted=false;
+
 
 
     //date time
@@ -150,6 +151,7 @@ public:
     void            setLowerCase();
     void            clearKeys();
     void            pressKey(const KeyboardKey); 
+    bool            isCtrl();
 
     //date time
     const Time&            getTime();
@@ -201,7 +203,10 @@ const KeyboardKey   SPECIAL_KEYS[SPECIAL_KEYS_SIZE] = {
     KEY_MINUS,
     KEY_APOSTROPHE,
     KEY_EQUAL,
-    KEY_SEMICOLON
+    KEY_SEMICOLON,
+    KEY_TAB,
+    KEY_LEFT_CONTROL,
+    KEY_RIGHT_CONTROL
 };
 
 const char          SPECIAL_CHARS[SPECIAL_KEYS_SIZE] = {

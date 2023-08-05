@@ -150,9 +150,13 @@ Stozer::update(){
     //end of the frame
     std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
     this->microseconds += std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
-    if(this->microseconds > 1000000){//1 second passed since last time
+    if(this->microseconds > 1000000){//1 second passed since last time, or possibly more
+        uint8_t seconds = this->microseconds / 1000000;
         this->microseconds = 0;
-        this->time_forward(speedBoost);
+        this->time_forward(speedBoost * seconds);
+
+        //reset timed keys
+        this->isShifted = false;
     }
 }
 
@@ -441,7 +445,10 @@ Stozer::pressKey(const KeyboardKey key){
         this->keyQueue.push(key);
 } 
 
-
+bool
+Stozer::isCtrl(){
+    return IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL);
+}
 
 // date time
 const Time&
@@ -657,7 +664,7 @@ Stozer::makeFile(const std::string &relativePath){
         if(!ofs.is_open())
             return 0;
         //add header
-        ofs << filesystem::FILE_HEADER; 
+        ofs << filesystem::FILE_HEADER << "\n"; 
         ofs.close();
         return 1;
     }else{

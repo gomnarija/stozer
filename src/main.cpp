@@ -9,6 +9,7 @@
 #include <ukloni.h>
 #include <pomeri.h>
 #include <kopiraj.h>
+#include <uredi.h>
 
 using namespace stozer;
 
@@ -29,6 +30,7 @@ int main(void){
     stz.processLoad(std::make_unique<Ukloni>(stz, ""));
     stz.processLoad(std::make_unique<Pomeri>(stz, ""));
     stz.processLoad(std::make_unique<Kopiraj>(stz, ""));
+    stz.processLoad(std::make_unique<Uredi>(stz, ""));
 
 
     //run krsh

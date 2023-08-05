@@ -13,7 +13,8 @@ std::string                                 trim_string(std::string);
 std::string                                 remove_extra_whitespace(std::string);
 std::string                                 replace_all(std::string&, const std::string&, const std::string&);
 std::vector<std::string>                    split_string(const std::string&, const std::string&); 
-std::pair<std::string, std::string>         split_string_into_two(const std::string&, const std::string&); 
+std::pair<std::string, std::string>         split_string_into_two(const std::string&, const std::string&);
+std::string                                 truncate_string(std::string, size_t);
 };
 
 //
@@ -31,7 +32,7 @@ uint8_t                                     days_in_a_month(const stozer::Date &
 
 namespace filesystem{
 static const char                           SEPARATOR = '\\';
-static const std::string                    FILE_HEADER = "[stozer_file]\n";
+static const std::string                    FILE_HEADER = "[stozer_file]";
 
 bool                                        is_valid_path(const std::string&);
 bool                                        is_valid_name(const std::string&);

@@ -81,9 +81,9 @@ void Krsh::update(){
     std::string inputTxt = this->stozer.getInputTxt();
     KeyboardKey key = this->stozer.getPressedKey();
 
-    //case
-    if(key == KEY_CAPS_LOCK)
-        stozer.caseToggle();
+    //case, 
+    // if(key == KEY_CAPS_LOCK)
+    //     stozer.caseToggle();
 
     //textBox input
     if(!inputTxt.empty() && (this->textBox->getCurrentIndex() - commandStartIndex) <= maxCommandLength){
@@ -133,10 +133,10 @@ void Krsh::update(){
                 }
             }   
         }
-    }else{//blocking processwait until it's done
-        //if blockingPID is still running, print out and wait
-        // else print_handle and move commandStartIndex
-        if(stozer.isProcessRunning(blockingPID) && this->krshOutStream.rdbuf()->in_avail() > 0){
+    }else{//blocking process wait until it's done
+        //print outstream
+        // if its done print_handle and move commandStartIndex
+        if(this->krshOutStream.rdbuf()->in_avail() > 0){//stozer.isProcessRunning(blockingPID) && this->krshOutStream.rdbuf()->in_avail() > 0){
             //new line
             this->textBox->insertLineAtCursor(" ");//TODO: this is not ideal,
                                         // maybe add TextBox function that adds newline flag at the end
@@ -153,17 +153,19 @@ void Krsh::update(){
             }
             
             this->krshOutStream.str(std::string());;
-        }else{//process is done
-            this->PIDMap.erase(blockingPID);
-            next_command(this->textBox, this->handle, &(this->configMap), &(this->commandStartIndex), this->maxTextBoxTextLength);
         }
-
-        const Process *prc = this->stozer.getRunningProcess(blockingPID);
-        //command, terminate it
-        if(prc != nullptr && prc->isCommand() && this->PIDMap.find(blockingPID) != this->PIDMap.end()){
-            this->stozer.processTerminate(blockingPID);
+        //process is done
+        if(!stozer.isProcessRunning(blockingPID)){
             this->PIDMap.erase(blockingPID);
-            next_command(this->textBox, this->handle, &(this->configMap), &(this->commandStartIndex), this->maxTextBoxTextLength);
+            next_command(this->textBox, this->handle, &(this->configMap), &(this->commandStartIndex), this->maxTextBoxTextLength);   
+        }else{//still running
+            const Process *prc = this->stozer.getRunningProcess(blockingPID);
+            //command, terminate it
+            if(prc != nullptr && prc->isCommand() && this->PIDMap.find(blockingPID) != this->PIDMap.end()){
+                this->stozer.processTerminate(blockingPID);
+                this->PIDMap.erase(blockingPID);
+                next_command(this->textBox, this->handle, &(this->configMap), &(this->commandStartIndex), this->maxTextBoxTextLength);
+            }
         }
         
     }
@@ -230,9 +232,10 @@ std::pair<uint16_t, bool> run_process(Stozer &stozer, const std::string &process
     uint16_t PID = stozer.processRun(processName, arguments, outStream);
     if(PID > 0){
         const Process *prc = stozer.getRunningProcess(PID);
-        if(prc == nullptr)
+        if(prc == nullptr){
+            PLOG_DEBUG << "paosam";
             return std::pair<uint16_t, bool>(0, false);
-
+        }
         bool isBackground = prc->isBackground();
         PIDMap->emplace(PID, isBackground);
         return std::pair<uint16_t, bool>(PID, isBackground);
@@ -278,8 +281,8 @@ void error_process_not_found(termija::TextBox *textBox, const std::string &proce
                                         // maybe add TextBox function that adds newline flag at the end
 
     std::stringstream error;
-    error << "Komanda '" << processName << "'" << " nije pronađena. Proveri da li je ispravno unesena pa probaj ponovo. "
-    << " Iskoristi komandu 'pomozi' za listu svih dozvoljenih komandi.";
+    error << "komanda '" << processName << "'" << " nije pronađena. proveri da li je ispravno unesena pa probaj ponovo. "
+    << " iskoristi komandu 'pomozi' za listu svih dozvoljenih komandi.";
     textBox->insertAtCursor(error.str().c_str());
 
 }

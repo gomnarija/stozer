@@ -84,7 +84,23 @@ std::pair<std::string, std::string> split_string_into_two(const std::string& str
     }
 
     return std::pair<std::string, std::string>(left, right);
-} 
+}
+
+
+/*
+    truncates given string if it goes over given length,
+        replaceing last 3 chars with ...
+*/
+std::string truncate_string(std::string str, size_t length){
+    if(str.length() <= length)
+        return str;
+
+    str = str.substr(0, length);
+    for(int i=str.length()-1;i>0&&i>str.length()-4;i--)
+        str.at(i) = '.';
+
+    return str;
+}
 
 }
 
