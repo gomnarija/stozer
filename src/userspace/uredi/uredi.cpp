@@ -37,6 +37,7 @@ void Uredi::setup(){
 
     //commands, TODO:add config
     this->controlKeysMap.emplace(KEY_S, &Uredi::save_file);
+    this->controlKeysMap.emplace(KEY_I, &Uredi::quit);
 
 
     //parse argumentString
@@ -97,12 +98,10 @@ void Uredi::setup(){
     //options section entries // TODO : load from config
     this->optionsSectionEntries.push_back(std::pair("ctrl+i", " izađi"));
     this->optionsSectionEntries.push_back(std::pair("ctrl+p", " pomozi"));
-        this->optionsSectionEntries.push_back(std::pair("ctrl+k", " muda"));
+        this->optionsSectionEntries.push_back(std::pair("ctrl+s", " sačuvaj"));
         this->optionsSectionEntries.push_back(std::pair("ctrl+t", " muda"));
         this->optionsSectionEntries.push_back(std::pair("ctrl+g", " muda"));
         this->optionsSectionEntries.push_back(std::pair("ctrl+b", " muda"));
-        this->optionsSectionEntries.push_back(std::pair("ctrl+n", " muda"));
-        this->optionsSectionEntries.push_back(std::pair("ctrl+d", " muda"));
     //TUI widgets
     this->setup_box();
     this->setup_options_section();
@@ -197,6 +196,11 @@ Uredi::save_file(){
     this->stozer.processTerminate(this->PID);
 }
 
+void
+Uredi::quit(){
+    //TODO:check if it has been saved before quitting
+    this->stozer.processTerminate(this->PID);
+}
 
 
 

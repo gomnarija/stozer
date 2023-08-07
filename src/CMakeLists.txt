@@ -4,6 +4,7 @@ ${SOURCE_DIR}/stozer.cpp
 ${SOURCE_DIR}/utils.cpp
 ${SOURCE_DIR}/process.cpp
 ${SOURCE_DIR}/userspace/argumentator.cpp
+${SOURCE_DIR}/userspace/configurator.cpp
 ${SOURCE_DIR}/userspace/krsh.cpp
 ${SOURCE_DIR}/userspace/kalendar.cpp
 ${SOURCE_DIR}/userspace/fs/gde.cpp
@@ -24,6 +25,7 @@ set(HEADER_FILES
 ${SOURCE_DIR}/stozer.h
 ${SOURCE_DIR}/utils.h
 ${SOURCE_DIR}/userspace/argumentator.h
+${SOURCE_DIR}/userspace/configurator.h
 ${SOURCE_DIR}/userspace/krsh.h
 ${SOURCE_DIR}/userspace/kalendar.h
 ${SOURCE_DIR}/userspace/fs/gde.h

@@ -221,7 +221,23 @@ const char          SPECIAL_CHARS[SPECIAL_KEYS_SIZE] = {
     '\\',
     '-',
     '=',
-    '\''
+    '\'',
+    '_',
+    '<',
+    '>',
+    ':',
+    ';',
+    '!',
+    '@',
+    '#',
+    '$',
+    '%',
+    '^',
+    '&',
+    '*',
+    '(',
+    ')',
+    '+'
 };
 
 const int          LAT_CHARS[LAT_KEYS_SIZE] = {

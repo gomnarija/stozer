@@ -18,6 +18,10 @@ private:
     uint16_t                    maxTextBoxTextLength    = 32768;//maximum allowed textBox text length, clears if over
 
 
+//user config
+    std::string                 configFileRelativePath  = "/korisnici/rs26/_krsh";
+
+
 
 
 
@@ -26,8 +30,8 @@ private:
     termija::TextBox                                *textBox;
     size_t                                          commandStartIndex;
     std::stringstream                               krshOutStream;
-    std::unordered_map<std::string, std::string>    configMap;
-    std::string                                     handle;
+    std::unordered_map<std::string, std::string>    configMap;//values to be used, mainly in handle
+    std::string                                     handle = "%ime@stožer>";//default
     std::map<uint16_t, bool>                        PIDMap;
 
 

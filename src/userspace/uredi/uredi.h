@@ -65,6 +65,7 @@ private:
     void            handle_command(KeyboardKey);
     //commands
     void            save_file();
+    void            quit();
 public:
     //cycle
     void setup() override;

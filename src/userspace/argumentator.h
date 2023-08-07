@@ -1,3 +1,7 @@
+#ifndef ARGUMENTATOR_H
+#define ARGUMENTATOR_H
+
+
 #include <string>
 #include <vector>
 
@@ -22,3 +26,6 @@ public:
 };
 
 }
+
+
+#endif

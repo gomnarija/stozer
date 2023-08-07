@@ -6,6 +6,7 @@
 #include <stozer.h>
 #include <termija.h>
 #include <utils.h>
+#include <configurator.h>
 
 #include <plog/Log.h>
 #include <regex>
@@ -63,8 +64,20 @@ void Krsh::setup(){
 
 
     //config TODO
+    std::string configFilePath = this->stozer.getWorkingDirectory();
+    if(filesystem::move_path(configFilePath, this->configFileRelativePath, this->stozer.getRootDirectory())){
+        Configurator configurator;
+        if(configurator.loadFile(configFilePath+".txt")){
+            std::string value;
+            value = configurator.getValue("potpis");
+            if(!value.empty()){
+                this->handle = value;
+            }
+        }
+    }
+    //configMap
     this->configMap.emplace("ime", "laza");
-    this->handle = "%ime@stožer>";
+    
     //startup
     next_command(this->textBox, this->handle, &(this->configMap), &(this->commandStartIndex), this->maxTextBoxTextLength);
 
