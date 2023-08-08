@@ -12,6 +12,11 @@ class Listaj : public Process{
 
 private:
     std::string         listajArguments;
+    bool                showHidden=false;
+    char                hiddingChar = '_';
+
+    void                displayHelp();
+    void                filterHidden(std::vector<std::string> &);
 
 public:
     //cycle
