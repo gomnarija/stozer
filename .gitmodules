@@ -1,3 +1,6 @@
 [submodule "termija"]
 	path = termija
 	url = https://github.com/gomnarija/termija.git
+[submodule "momo"]
+	path = momo
+	url = https://github.com/gomnarija/momo.git
