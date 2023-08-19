@@ -189,7 +189,6 @@ void Krsh::update(){
 
 
 void Krsh::draw(){
-    this->textBox->update();
 }
 
 

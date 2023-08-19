@@ -4,6 +4,7 @@
 #include <filesystem>
 #include <algorithm>
 #include <rope.h>
+#include <fstream>
 
 namespace stozer{
 
@@ -399,6 +400,27 @@ std::u32string path_to_u32(const std::string &path){
     return pu.u32string();
 }
 
+
+
+/*
+    checks if file exists and has stozer header
+*/
+bool is_stozer_file(const std::string &path){
+    std::ifstream file(std::filesystem::u8path(path));
+    if(!file.is_open())
+        return false;
+
+    //file has to have stozer header
+    std::string header;
+    std::getline(file, header);
+    if(header != filesystem::FILE_HEADER){
+        file.close();
+        return false;
+    }
+
+    file.close();
+    return !file.is_open();
+}
 
 
 }

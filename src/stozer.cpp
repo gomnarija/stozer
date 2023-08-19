@@ -137,10 +137,17 @@ Stozer::update(){
 
     //processes
     std::unordered_map
-        < uint16_t, std::unique_ptr<Process> >::iterator it;
+        < uint16_t, std::unique_ptr<Process> >::iterator it, nit;
     for(it = running.begin(); it != running.end(); it++){
         Process *currentProcess = it->second.get();
+        uint16_t PID = currentProcess->getPID();
+        nit = it;nit++;//in case process gets terminated start from next one
         currentProcess->update();
+        //process terminated
+        if(!this->isProcessRunning(PID)){
+            it = nit;
+            continue;
+        }
         //draw if in front
         if(currentProcess->getPID() == this->getFrontPID())
             currentProcess->draw();

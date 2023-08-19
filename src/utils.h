@@ -33,6 +33,7 @@ uint8_t                                     days_in_a_month(const stozer::Date &
 namespace filesystem{
 static const char                           SEPARATOR = '\\';
 static const std::string                    FILE_HEADER = "[stozer_file]";
+static const std::string                    FILE_EXTENSION = ".txt";
 
 bool                                        is_valid_path(const std::string&);
 bool                                        is_valid_name(const std::string&);
@@ -46,6 +47,7 @@ bool                                        is_txt(const std::string &);
 bool                                        is_dir(const std::string &);
 bool                                        is_dir_empty(const std::string &);
 std::u32string                              path_to_u32(const std::string &);
+bool                                        is_stozer_file(const std::string &);
 
 };
 

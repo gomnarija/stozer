@@ -55,7 +55,7 @@ private:
     void            setup_text_box();
     uint16_t        get_options_section_height();
     //IO
-    const std::string       &getFileName();
+    std::string             getFileName();
     bool                    loadFromFile(const std::string &);
     bool                    saveToFile(const std::string &);
     bool                    fileExists(const std::string &);

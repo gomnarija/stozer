@@ -128,15 +128,14 @@ void Uredi::setup(){
 
 void Uredi::cleanup(){
     //TODO: cleanup widgets
+    termija::tra_remove_pane(this->pane);
 
 }
 
 void Uredi::draw(){
-    this->box->update();
 }
 
 void Uredi::update(){
-
     if(shouldEnd){
         this->stozer.processTerminate(this->PID);
         return;
@@ -162,9 +161,20 @@ void Uredi::update(){
 
 
 
-const std::string&
+std::string
 Uredi::getFileName(){
-    return this->defaultFileName;
+    if(this->filePath.empty()){
+        return this->defaultFileName;
+    }else{
+        //get file name from path
+        if((this->filePath.find_last_of('\\')+1) < this->filePath.size()){
+            return this->filePath.substr(this->filePath.find_last_of('\\')+1);
+        }else if((this->filePath.find_last_of('/')+1) < this->filePath.size()){
+            return this->filePath.substr(this->filePath.find_last_of('/')+1);
+        }else{
+            return this->filePath;
+        }
+    }
 }
 
 

@@ -35,7 +35,8 @@ void Uredi::setup_options_section(){
     termija::Termija &termija = termija::tra_get_instance();
     uint16_t fontWidth = (termija.fontWidth+termija.fontSpacing);
     uint16_t fontHeight = (termija.fontHeight+termija.fontSpacing);
-    uint8_t distance = ((float)(this->box->getWidth() - this->optionsSectionWidthMargin*2*fontWidth)/ this->entriesPerRow);//distance from beggining of one entry to next
+    uint16_t distance = ((this->pane->width - (this->optionsSectionWidthMargin*2*fontWidth))/ this->entriesPerRow);//distance from beggining of one entry to next
+
     distance -= (distance%fontWidth);//this is to that it fits with text. i think
 
     //starting position, bottomLeft of the box + margins
