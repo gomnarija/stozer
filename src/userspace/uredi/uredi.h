@@ -27,16 +27,19 @@ private:
     std::vector<std::pair<std::string, 
                 std::string>>       optionsSectionEntries;
     uint8_t                         optionsSectionHeightMargin = 1;//in text size, applied before and after
-    uint8_t                         optionsSectionWidthMargin = 2;//in text size, applied before and after
+    uint8_t                         optionsSectionWidthMargin = 1;//in text size, applied before and after
     uint8_t                         entriesPerRow = 3;
     uint8_t                         optionsSectionRows=1;//counter
     std::vector<termija::Text*>     optionsSectionTextVector;  
     //file name
     termija::Text       *fileNameText;
     uint8_t             maxFileNameLength = 16;
+    //cursor position
+    termija::Text       *cursorPositionText;
+    std::string          cursorPosition;
+    termija::Bar        *topBar;
     //textBox
     termija::TextBox    *textBox;
-    uint8_t             textBoxMargin = 1;//percentage of box size;
     //IO
     const std::string   fileExtension = ".txt";
     const std::string   defaultFileName = "nepoznato";
@@ -52,8 +55,15 @@ private:
     void            setup_box();
     void            setup_options_section();
     void            setup_file_name();
+    void            setup_cursor_position();
+    void            setup_top_bar();
     void            setup_text_box();
     uint16_t        get_options_section_height();
+
+    void            update_cursor_position();
+    void            update_top_bar();
+
+    std::string             getCursorPosition();
     //IO
     std::string             getFileName();
     bool                    loadFromFile(const std::string &);

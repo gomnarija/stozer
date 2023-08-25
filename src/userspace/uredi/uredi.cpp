@@ -107,7 +107,8 @@ void Uredi::setup(){
     this->setup_options_section();
     this->setup_file_name();
     this->setup_text_box();
-
+    this->setup_cursor_position();
+    this->setup_top_bar();
 
 
     //IO
@@ -157,6 +158,8 @@ void Uredi::update(){
     }
 
 
+    //TUI
+    this->update_cursor_position();
 }
 
 
@@ -166,15 +169,25 @@ Uredi::getFileName(){
     if(this->filePath.empty()){
         return this->defaultFileName;
     }else{
+        std::string path = this->filePath;
+        string::replace_all(path, "\\", "/");
         //get file name from path
-        if((this->filePath.find_last_of('\\')+1) < this->filePath.size()){
-            return this->filePath.substr(this->filePath.find_last_of('\\')+1);
-        }else if((this->filePath.find_last_of('/')+1) < this->filePath.size()){
-            return this->filePath.substr(this->filePath.find_last_of('/')+1);
+        if((path.find_last_of('/')+1) < path.size()){
+            return path.substr(path.find_last_of('/')+1);
         }else{
-            return this->filePath;
+            return path;
         }
     }
+}
+
+std::string
+Uredi::getCursorPosition(){
+    if(this->textBox == nullptr){
+        return "";
+    }
+
+    std::pair<uint16_t, uint16_t> cursorPosition = this->textBox->getCursorPosition();
+    return std::to_string(cursorPosition.second) + "," + std::to_string(cursorPosition.first);
 }
 
 

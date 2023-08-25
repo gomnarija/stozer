@@ -80,6 +80,41 @@ void Uredi::setup_file_name(){
     this->fileNameText->insertAt(string::truncate_string(this->getFileName(), this->maxFileNameLength).c_str(), 0, FLAG_INVERT);
 }
 
+void Uredi::setup_cursor_position(){
+    if(this->box == nullptr)
+        return;
+
+    termija::Termija &termija = termija::tra_get_instance();
+    uint16_t fontWidth = (termija.fontWidth+termija.fontSpacing);
+    uint16_t fontHeight = (termija.fontHeight+termija.fontSpacing);
+
+    //
+    std::string cursorPosition = this->getCursorPosition();
+
+    //position, right above box
+    uint16_t x = this->box->getX() + this->box->getWidth();
+    x -= ustrlen(cursorPosition) * fontWidth;
+    uint16_t y = ((float)this->pane->height / 100) * this->boxMargin;
+    this->cursorPositionText = (termija::Text*)termija::tra_add_widget(*(this->pane),
+                std::make_unique<termija::Text>(x, y, ""));
+    this->cursorPositionText->insertAt(cursorPosition.c_str(), 0, FLAG_INVERT);
+}
+
+void Uredi::setup_top_bar(){
+    if(this->box == nullptr || this->fileNameText == nullptr || this->cursorPositionText == nullptr)
+        return;
+
+    termija::Termija &termija = termija::tra_get_instance();
+    uint16_t fontWidth = (termija.fontWidth+termija.fontSpacing);
+    uint16_t fontHeight = (termija.fontHeight+termija.fontSpacing);
+
+    //position, above box
+    uint16_t x = this->fileNameText->getX() + (this->fileNameText->getTextWidth() * fontWidth);
+    uint16_t y = ((float)this->pane->height / 100) * this->boxMargin;
+    uint16_t width = (this->cursorPositionText->getX() - x);
+    this->topBar = (termija::Bar*)termija::tra_add_widget(*(this->pane),
+                std::make_unique<termija::Bar>(x, y, width, fontHeight));
+}
 
 
 void Uredi::setup_text_box(){
@@ -89,8 +124,8 @@ void Uredi::setup_text_box(){
     termija::Termija &termija = termija::tra_get_instance();
     uint16_t fontWidth = (termija.fontWidth+termija.fontSpacing);
     uint16_t fontHeight = (termija.fontHeight+termija.fontSpacing);
-    uint16_t marginWidth = ((float)(this->box->getWidth()/100) * this->textBoxMargin);
-    uint16_t marginHeight = ((float)(this->box->getHeight()/100) * this->textBoxMargin);
+    uint16_t marginWidth = fontWidth;
+    uint16_t marginHeight = fontHeight;
     //position, inside box + margin
     uint16_t x = this->box->getX() + marginWidth;
     uint16_t y = this->box->getY() + marginHeight;
@@ -110,6 +145,46 @@ uint16_t Uredi::get_options_section_height(){
     return (fontHeight * this->optionsSectionRows) + (this->optionsSectionHeightMargin * fontHeight);
 }
 
+
+
+
+void Uredi::update_cursor_position(){
+    if(this->box == nullptr || this->cursorPositionText == nullptr)
+        return;
+    
+    termija::Termija &termija = termija::tra_get_instance();
+    uint16_t fontWidth = (termija.fontWidth+termija.fontSpacing);
+    uint16_t fontHeight = (termija.fontHeight+termija.fontSpacing);
+    std::string cursorPosition = this->getCursorPosition();
+
+    if(this->cursorPosition == cursorPosition){
+        return;
+    }
+    this->cursorPosition = cursorPosition;
+
+    //position, right above box
+    uint16_t x = this->box->getX() + this->box->getWidth();
+    x -= ustrlen(cursorPosition) * fontWidth;
+
+    this->cursorPositionText->setPosition(x, this->cursorPositionText->getY());
+    this->cursorPositionText->setText(cursorPosition.c_str(), FLAG_INVERT);
+
+    this->update_top_bar();
+}
+
+void Uredi::update_top_bar(){
+    if(this->box == nullptr || this->fileNameText == nullptr || this->cursorPositionText == nullptr || this->topBar==nullptr)
+        return;
+
+    termija::Termija &termija = termija::tra_get_instance();
+    uint16_t fontWidth = (termija.fontWidth+termija.fontSpacing);
+    uint16_t fontHeight = (termija.fontHeight+termija.fontSpacing);
+
+    //resize
+    uint16_t x = this->fileNameText->getX() + (this->fileNameText->getTextWidth() * fontWidth);
+    uint16_t width = (this->cursorPositionText->getX() - x);
+    this->topBar->resize(width, fontHeight);
+}
 
 
 };
