@@ -22,6 +22,9 @@ uint16_t                            find_blocking_PID(Stozer &, std::map<uint16_
 void                                error_process_not_found(termija::TextBox *, const std::string &);
 std::pair<uint16_t, bool>           run_process(Stozer &, const std::string &, const std::string &, std::map<uint16_t, bool> *, std::stringstream &);
 void                                next_command(termija::TextBox *, std::string, std::unordered_map<std::string, std::string> *, size_t *, uint16_t);
+void                                print_running_processes(Stozer &stozer, termija::TextBox *, std::map<uint16_t, bool> *, uint16_t);
+void                                print_out_stream(termija::TextBox *, std::stringstream*);
+
 
 Krsh::Krsh(Stozer &stozer, const std::string &arguments) : Process(stozer, arguments){
 
@@ -114,6 +117,12 @@ void Krsh::update(){
         this->textBox->backspaceAtCursor();
 
 
+
+    //print outstream
+    print_out_stream(this->textBox, &(this->krshOutStream));
+
+
+
     //REPL
     uint16_t blockingPID = find_blocking_PID(this->stozer, &(this->PIDMap));//blocking meaning it's not running in background
     if(blockingPID == 0){//no blocking processes currently running
@@ -138,6 +147,7 @@ void Krsh::update(){
                         error_process_not_found(textBox, processName);
                         next_command(this->textBox, this->handle, &(this->configMap), &(this->commandStartIndex), this->maxTextBoxTextLength);
                     }else if(resPair.second){//non-blocking, meaning it's runnig in background
+                        print_out_stream(this->textBox, &(this->krshOutStream));
                         next_command(this->textBox, this->handle, &(this->configMap), &(this->commandStartIndex), this->maxTextBoxTextLength);
                     }
                 }
@@ -147,26 +157,6 @@ void Krsh::update(){
             }   
         }
     }else{//blocking process wait until it's done
-        //print outstream
-        // if its done print_handle and move commandStartIndex
-        if(this->krshOutStream.rdbuf()->in_avail() > 0){//stozer.isProcessRunning(blockingPID) && this->krshOutStream.rdbuf()->in_avail() > 0){
-            //new line
-            this->textBox->insertLineAtCursor(" ");//TODO: this is not ideal,
-                                        // maybe add TextBox function that adds newline flag at the end
-            //print outStream
-            std::vector<std::string> lines = string::split_string(this->krshOutStream.str(), "\n");
-            for(size_t i=0;i<lines.size();i++){
-                if(i<lines.size()-1){
-                    this->textBox->insertLineAtCursor(lines.at(i).c_str());
-                }else{
-                    //dont new line the last one, there will be new line in next_command
-                    this->textBox->insertAtCursor(lines.at(i).c_str());
-                }
-            
-            }
-            
-            this->krshOutStream.str(std::string());;
-        }
         //process is done
         if(!stozer.isProcessRunning(blockingPID)){
             this->PIDMap.erase(blockingPID);
@@ -180,10 +170,7 @@ void Krsh::update(){
                 next_command(this->textBox, this->handle, &(this->configMap), &(this->commandStartIndex), this->maxTextBoxTextLength);
             }
         }
-        
     }
-
-
 }
 
 
@@ -200,6 +187,14 @@ void Krsh::draw(){
 void Krsh::cleanup(){
     //destroy pane
     termija::tra_remove_pane(this->pane);
+    //terminate processess
+    std::map<uint16_t, bool>::iterator mit = PIDMap.begin();
+    while(mit != PIDMap.end()){
+        uint16_t PID = mit->first;
+        //terminate
+        this->stozer.processTerminate(PID);
+        mit++;
+    }
     
 }
 
@@ -219,7 +214,10 @@ int8_t Krsh::built_in_commands(const std::string &command, const std::string &ar
         return 1;
     }
     
-
+    if(command == "prc"){
+        print_running_processes(this->stozer, this->textBox, &(this->PIDMap), this->getPID());
+        return 1;
+    }
 
 
     return 0;
@@ -265,7 +263,7 @@ uint16_t find_blocking_PID(Stozer &stozer, std::map<uint16_t, bool> *PIDMap){
     while(mit != PIDMap->rend()){
         if(!mit->second)//blocking if isBackground is false
             return mit->first;
-        mit--;
+        mit++;
     }
 
     return 0;
@@ -364,6 +362,56 @@ void scroll(KeyboardKey key, termija::TextBox *textBox){
     }
     else if(key == KEY_PAGE_UP){
         textBox->frameCursorMove(-1);
+    }
+}
+
+
+
+//
+//  BUILT-IN
+//
+
+/*
+    prints currently running processess connected with this krsh instance
+*/
+void print_running_processes(Stozer &stozer, termija::TextBox *textBox, std::map<uint16_t, bool> *PIDMap, uint16_t PID){
+    const Process *p;
+    //add krsh info
+    textBox->insertLineAtCursor(" ");//TODO: new line instead of this
+    textBox->insertLineAtCursor("PID  ime");
+    textBox->insertAtCursor((std::to_string(PID) + "    krsh").c_str());
+
+    std::map<uint16_t, bool>::iterator mit = PIDMap->begin();
+    while(mit != PIDMap->end()){
+        uint16_t PID = mit->first;
+        //get process name
+        if((p = stozer.getRunningProcess(PID)) != nullptr){
+            textBox->insertLineAtCursor(" ");//TODO: same
+            textBox->insertAtCursor(( std::to_string(p->getPID()) + "    " + p->getName()).c_str());
+        }
+        mit++;
+    }
+
+}
+
+void print_out_stream(termija::TextBox *textBox, std::stringstream *outStream){
+    if(outStream->rdbuf()->in_avail() > 0){
+        //new line
+        textBox->insertLineAtCursor(" ");//TODO: this is not ideal,
+                                    // maybe add TextBox function that adds newline flag at the end
+        //print outStream
+        std::vector<std::string> lines = string::split_string(outStream->str(), "\n");
+        for(size_t i=0;i<lines.size();i++){
+            if(i<lines.size()-1){
+                textBox->insertLineAtCursor(lines.at(i).c_str());
+            }else{
+                //dont new line the last one, there will be new line in next_command
+                textBox->insertAtCursor(lines.at(i).c_str());
+            }
+        
+        }
+        
+        outStream->str(std::string());;
     }
 }
 

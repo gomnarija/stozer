@@ -163,7 +163,7 @@ Stozer::update(){
         this->time_forward(speedBoost * seconds);
 
         //reset timed keys
-        this->isShifted = false;
+        this->isShifted = false;//i don't think this is used anywhere
     }
 }
 
@@ -193,7 +193,7 @@ Stozer::end(){
 */
 uint16_t 
 Stozer::get_next_PID(){
-    int currentPID = this->availablePID;
+    int currentPID = this->availablePID + 1;
     while(this->running.find(currentPID) != this->running.end())
         currentPID++;
 
