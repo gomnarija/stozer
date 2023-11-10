@@ -11,6 +11,8 @@
 #include <kopiraj.h>
 #include <uredi.h>
 #include <izvrsi.h>
+#include <posta.h>
+#include <fakture.h>
 
 using namespace stozer;
 
@@ -33,6 +35,8 @@ int main(void){
     stz.processLoad(std::make_unique<Kopiraj>(stz, ""));
     stz.processLoad(std::make_unique<Uredi>(stz, ""));
     stz.processLoad(std::make_unique<Izvrsi>(stz, ""));
+    stz.processLoad(std::make_unique<Posta>(stz, ""));
+    stz.processLoad(std::make_unique<Fakture>(stz, ""));
 
 
     //run krsh

@@ -115,7 +115,7 @@ void Krsh::update(){
 
 
     //REPL
-    uint16_t blockingPID = find_blocking_PID(this->stozer, &(this->PIDMap));
+    uint16_t blockingPID = find_blocking_PID(this->stozer, &(this->PIDMap));//blocking meaning it's not running in background
     if(blockingPID == 0){//no blocking processes currently running
         if(key == KEY_ENTER){
             //get and parse command
@@ -137,7 +137,7 @@ void Krsh::update(){
                     if(resPair.first == 0){//no process with that name
                         error_process_not_found(textBox, processName);
                         next_command(this->textBox, this->handle, &(this->configMap), &(this->commandStartIndex), this->maxTextBoxTextLength);
-                    }else if(resPair.second){//non-blocking
+                    }else if(resPair.second){//non-blocking, meaning it's runnig in background
                         next_command(this->textBox, this->handle, &(this->configMap), &(this->commandStartIndex), this->maxTextBoxTextLength);
                     }
                 }
@@ -173,7 +173,7 @@ void Krsh::update(){
             next_command(this->textBox, this->handle, &(this->configMap), &(this->commandStartIndex), this->maxTextBoxTextLength);   
         }else{//still running
             const Process *prc = this->stozer.getRunningProcess(blockingPID);
-            //command, terminate it
+            //command, terminate it TODO: don't terminate from h
             if(prc != nullptr && prc->isCommand() && this->PIDMap.find(blockingPID) != this->PIDMap.end()){
                 this->stozer.processTerminate(blockingPID);
                 this->PIDMap.erase(blockingPID);
@@ -245,7 +245,6 @@ std::pair<uint16_t, bool> run_process(Stozer &stozer, const std::string &process
     if(PID > 0){
         const Process *prc = stozer.getRunningProcess(PID);
         if(prc == nullptr){
-            PLOG_DEBUG << "paosam";
             return std::pair<uint16_t, bool>(0, false);
         }
         bool isBackground = prc->isBackground();
@@ -253,7 +252,7 @@ std::pair<uint16_t, bool> run_process(Stozer &stozer, const std::string &process
         return std::pair<uint16_t, bool>(PID, isBackground);
     }
     else
-        return std::pair<uint16_t, bool>(0, true);
+        return std::pair<uint16_t, bool>(0, true);//true here doesn't matter, it won't be used i think
 }
 
 

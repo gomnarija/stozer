@@ -24,6 +24,9 @@ void Uredi::setup_box(){
     uint16_t height = this->pane->height - (y + ((float)this->pane->height / 100) * this->boxMargin);
     this->box = (termija::Box*)termija::tra_add_widget(*(this->pane),
                                             std::make_unique<termija::Box>(x, y, width, height));
+
+
+    this->box->activate(false);
 }
 
 
@@ -131,7 +134,7 @@ void Uredi::setup_text_box(){
     uint16_t y = this->box->getY() + marginHeight;
     //size
     uint16_t width = std::max((this->box->getWidth() - (2*marginWidth)) / fontWidth, 1);
-    uint16_t height = std::max(((this->box->getHeight() - (2*marginHeight)) / fontHeight) - (get_options_section_height() / fontHeight), 1);
+    uint16_t height = std::max(((this->box->getHeight()) / fontHeight) - (get_options_section_height() / fontHeight), 1);
 
     this->textBox = (termija::TextBox*)termija::tra_add_widget(*(this->pane),
                 std::make_unique<termija::TextBox>(x, y, width, height));

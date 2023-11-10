@@ -99,9 +99,9 @@ void Uredi::setup(){
     this->optionsSectionEntries.push_back(std::pair("ctrl+i", " izađi"));
     this->optionsSectionEntries.push_back(std::pair("ctrl+p", " pomozi"));
         this->optionsSectionEntries.push_back(std::pair("ctrl+s", " sačuvaj"));
-        this->optionsSectionEntries.push_back(std::pair("ctrl+t", " muda"));
-        this->optionsSectionEntries.push_back(std::pair("ctrl+g", " muda"));
-        this->optionsSectionEntries.push_back(std::pair("ctrl+b", " muda"));
+        this->optionsSectionEntries.push_back(std::pair("ctrl+t", " izaberi"));
+        this->optionsSectionEntries.push_back(std::pair("ctrl+g", " kopiraj"));
+        this->optionsSectionEntries.push_back(std::pair("ctrl+b", " nalepi"));
     //TUI widgets
     this->setup_box();
     this->setup_options_section();

@@ -21,6 +21,10 @@ ${SOURCE_DIR}/userspace/uredi/files.cpp
 ${SOURCE_DIR}/userspace/izvrsi/izvrsi.cpp
 ${SOURCE_DIR}/userspace/izvrsi/executor.cpp
 ${SOURCE_DIR}/userspace/izvrsi/files.cpp
+${SOURCE_DIR}/userspace/posta/posta.cpp
+${SOURCE_DIR}/userspace/posta/tui.cpp
+${SOURCE_DIR}/userspace/posta/input.cpp
+${SOURCE_DIR}/userspace/fakture/fakture.cpp
 ${SOURCE_DIR}/userspace/sat.cpp)
 set(SOURCE_FILES ${SOURCE_FILES} PARENT_SCOPE)
 #header files
@@ -40,5 +44,7 @@ ${SOURCE_DIR}/userspace/fs/pomeri.h
 ${SOURCE_DIR}/userspace/fs/kopiraj.h
 ${SOURCE_DIR}/userspace/uredi/uredi.h
 ${SOURCE_DIR}/userspace/izvrsi/izvrsi.h
+${SOURCE_DIR}/userspace/posta/posta.h
+${SOURCE_DIR}/userspace/fakture/fakture.h
 ${SOURCE_DIR}/userspace/sat.h)
 set(HEADER_FILES ${HEADER_FILES} PARENT_SCOPE)
