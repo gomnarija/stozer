@@ -34,6 +34,7 @@ protected:
     bool                            isBackgroundProcess=false;//is process running in the background, not by default
     bool                            isCommandProcess=false;//terminates after setup
     std::stringstream               *outStream;
+    void                            printOutStream(const std::string &);
 
 public:
     Stozer                         &stozer;

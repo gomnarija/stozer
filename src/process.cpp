@@ -42,4 +42,13 @@ Process::isCommand() const{
     return this->isCommandProcess;
 }
 
+
+void
+Process::printOutStream(const std::string &text){
+    if(this->outStream == nullptr)
+        return;
+    *outStream << text;
+}
+
+
 }
