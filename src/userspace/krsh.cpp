@@ -10,6 +10,8 @@
 
 #include <plog/Log.h>
 #include <regex>
+#include <fstream>
+#include <filesystem>
 
 namespace stozer{
 
@@ -24,6 +26,18 @@ std::pair<uint16_t, bool>           run_process(Stozer &, const std::string &, c
 void                                next_command(termija::TextBox *, std::string, std::unordered_map<std::string, std::string> *, size_t *, uint16_t);
 void                                print_running_processes(Stozer &stozer, termija::TextBox *, std::map<uint16_t, bool> *, uint16_t);
 void                                print_out_stream(termija::TextBox *, std::stringstream*);
+void                                load_from_history(termija::TextBox *, std::vector<std::string> *, size_t, size_t);
+void                                load_cached_command(termija::TextBox *, const std::string &, size_t);
+void                                add_command_to_history(const std::string &, std::vector<std::string> *, size_t *);
+
+/*
+    history
+    loaded from file on start/
+    apply length limit at loading/
+    saved to file on exit
+
+*/
+
 
 
 Krsh::Krsh(Stozer &stozer, const std::string &arguments) : Process(stozer, arguments){
@@ -34,7 +48,7 @@ Krsh::Krsh(Stozer &stozer, const std::string &arguments) : Process(stozer, argum
 
 
 Process* Krsh::instantiate(const std::string &arguments){
-    return new Krsh(this->stozer, arguments);
+    return new Krsh(this->stozer, arguments); 
 }
 
 
@@ -84,6 +98,11 @@ void Krsh::setup(){
     //startup
     next_command(this->textBox, this->handle, &(this->configMap), &(this->commandStartIndex), this->maxTextBoxTextLength);
 
+
+
+    //history
+    this->load_history_file();
+    historyIndex = this->historyVector.size();
 }
 
 
@@ -92,25 +111,35 @@ void Krsh::setup(){
     called every frame
 */
 void Krsh::update(){
-
     //Keyboard input
     std::string inputTxt = this->stozer.getInputTxt();
     KeyboardKey key = this->stozer.getPressedKey();
-
-    //case, 
-    // if(key == KEY_CAPS_LOCK)
-    //     stozer.caseToggle();
-
+    //history
+    if(key == KEY_UP){
+        if(this->historyIndex > 0){
+            if(this->historyIndex == this->historyVector.size())//started scrolling history, cache current unfinished command
+                cachedCommand = get_command(this->textBox, this->commandStartIndex);
+            this->historyIndex--;
+        }
+        load_from_history(this->textBox, &(this->historyVector), this->historyIndex, this->commandStartIndex);
+    }
+    if(key == KEY_DOWN){
+        if(this->historyIndex < this->historyVector.size()-1){
+            this->historyIndex++;
+            load_from_history(this->textBox, &(this->historyVector), this->historyIndex, this->commandStartIndex);
+        }else if(this->historyIndex == this->historyVector.size()-1){
+            load_cached_command(this->textBox, this->cachedCommand, this->commandStartIndex);
+            this->historyIndex = this->historyVector.size();//so that it will cache it on next UP
+        }
+    }
     //textBox input
     if(!inputTxt.empty() && (this->textBox->getCurrentIndex() - commandStartIndex) <= maxCommandLength){
         this->textBox->insertAtCursor(inputTxt.c_str());
         textBox->scrollToEnd();
     }
-
     //textBox handling
     move_cursor(key, this->textBox, this->commandStartIndex);
     scroll(key, textBox);
-
     if(key == KEY_DELETE)
         this->textBox->deleteAtCursor();
     if(key == KEY_BACKSPACE && this->textBox->getCurrentIndex() > this->commandStartIndex)
@@ -122,13 +151,13 @@ void Krsh::update(){
     print_out_stream(this->textBox, &(this->krshOutStream));
 
 
-
     //REPL
     uint16_t blockingPID = find_blocking_PID(this->stozer, &(this->PIDMap));//blocking meaning it's not running in background
     if(blockingPID == 0){//no blocking processes currently running
         if(key == KEY_ENTER){
             //get and parse command
             std::string command = string::trim_string(get_command(textBox, commandStartIndex));
+            add_command_to_history(command, &(this->historyVector), &(this->historyIndex));
             if(command.empty()){
                 next_command(this->textBox, this->handle, &(this->configMap), &(this->commandStartIndex), this->maxTextBoxTextLength);
             }else{
@@ -185,6 +214,8 @@ void Krsh::draw(){
     called when terminated
 */
 void Krsh::cleanup(){
+    //save history
+    this->save_history_to_file();
     //destroy pane
     termija::tra_remove_pane(this->pane);
     //terminate processess
@@ -223,6 +254,69 @@ int8_t Krsh::built_in_commands(const std::string &command, const std::string &ar
     return 0;
 }
 
+
+void
+Krsh::load_config_file(){
+    //TODO
+}
+
+
+void
+Krsh::load_history_file(){
+    std::string historyFilePath = this->stozer.getWorkingDirectory();
+    if(!filesystem::move_path(historyFilePath, this->historyFileRleativePath, this->stozer.getRootDirectory())){
+        PLOG_ERROR << "paosam";
+        return;
+    }
+
+    std::ifstream file(std::filesystem::u8path(historyFilePath+this->fileExtension));
+    if(!file.is_open()){
+        return;
+    }
+    std::string line;
+    //skip header
+    if(!std::getline(file, line) || line != "[stozer_file]"){
+        file.close();
+        return;
+    }
+    //read line by line
+    size_t commandsLoaded = 0;
+    while(std::getline(file, line) && commandsLoaded < this->maxHistoryLength){
+        if(line.empty())
+            continue;
+
+        if(line.size() > this->maxCommandLength){
+            this->historyVector.push_back(line.substr(0, this->maxCommandLength));
+        }else{
+            this->historyVector.push_back(line);
+        }
+        commandsLoaded++;
+    }
+    //done
+    file.close();
+}
+
+
+void
+Krsh::save_history_to_file(){
+    std::string historyFilePath = this->stozer.getWorkingDirectory();
+    if(!filesystem::move_path(historyFilePath, this->historyFileRleativePath, this->stozer.getRootDirectory()))
+        return;
+
+    std::ofstream file(std::filesystem::u8path(historyFilePath + this->fileExtension), std::ios::app);
+    if(!file.is_open()){
+        return;
+    }
+
+    //add stozer header
+    // file << filesystem::FILE_HEADER << "\n";
+    //save from historyVector, line by line
+    for(size_t i = 0;i < this->historyVector.size();i++){
+        file << this->historyVector.at(i) << "\n";
+    }
+    //done
+    file.close();
+}
 
 //
 //  REPL
@@ -298,7 +392,6 @@ void error_process_not_found(termija::TextBox *textBox, const std::string &proce
 
 
 
-
 /*
     print handle in the new line before start of the next command
 */
@@ -335,6 +428,49 @@ void next_command(termija::TextBox *textBox, std::string handle, std::unordered_
     *commandStartIndex = textBox->getCurrentIndex();
     textBox->scrollToEnd();
 }
+
+
+/*
+    deletes non-finished command from textbox, inserts in it's place command at historyIndex from historyVector
+*/
+void load_from_history(termija::TextBox *textBox, std::vector<std::string> *historyVector, size_t historyIndex, size_t commandStartIndex){
+    if(historyVector->size() == 0 || historyIndex >= historyVector->size()){
+        return;
+    }
+    //delete non-finished command from textBox
+    if(textBox->getTextLength() > commandStartIndex){//NOTE: i don't think commandStartIndex can be lower than 1 :?
+        textBox->deleteAtRange(commandStartIndex-1, textBox->getTextLength());
+    }
+    //insert command from history
+    if(!(historyVector->at(historyIndex).empty()))
+        textBox->insertAtCursor(historyVector->at(historyIndex).c_str());
+}
+
+/*
+    loades cached command to text box
+*/
+void load_cached_command(termija::TextBox *textBox, const std::string &cachedCommand, size_t commandStartIndex){
+    //delete command from textBox
+    if(textBox->getTextLength() > commandStartIndex){//NOTE: i don't think commandStartIndex can be lower than 1 :?
+        textBox->deleteAtRange(commandStartIndex-1, textBox->getTextLength());
+    }
+    //insert cached command
+    if(!cachedCommand.empty())
+        textBox->insertAtCursor(cachedCommand.c_str());
+}
+
+/*
+    adds command to history vector if last command in vector is not a duplicate
+*/
+void add_command_to_history(const std::string &command, std::vector<std::string> *historyVector, size_t *historyIndex){
+    if(!historyVector->empty() && command == historyVector->back()){
+        return;
+    }
+    if(!command.empty())
+        historyVector->push_back(command);
+    *historyIndex = historyVector->size();
+}
+
 
 
 //
