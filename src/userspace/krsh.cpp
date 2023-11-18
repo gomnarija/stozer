@@ -30,14 +30,6 @@ void                                load_from_history(termija::TextBox *, std::v
 void                                load_cached_command(termija::TextBox *, const std::string &, size_t);
 void                                add_command_to_history(const std::string &, std::vector<std::string> *, size_t *);
 
-/*
-    history
-    loaded from file on start/
-    apply length limit at loading/
-    saved to file on exit
-
-*/
-
 
 
 Krsh::Krsh(Stozer &stozer, const std::string &arguments) : Process(stozer, arguments){

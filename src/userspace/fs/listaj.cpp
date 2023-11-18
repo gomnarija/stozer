@@ -107,8 +107,9 @@ Listaj::displayHelp(){
 
 void 
 Listaj::filterHidden(std::vector<std::string> &entries){
-    for(int i=1;i<entries.size();i++){
+    for(int i=0;i<entries.size();i++){
         std::string name = string::split_string_into_two(string::remove_extra_whitespace(entries.at(i)), " ").second;
+        name = stozer::filesystem::get_name(name);
         if(name.size() > 0 && name.at(0) == this->hiddingChar){
             entries.erase((entries.begin() + i));
             i--;
